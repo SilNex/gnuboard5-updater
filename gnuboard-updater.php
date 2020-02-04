@@ -1,27 +1,23 @@
 <?php
-
-/**
- * @param string $string
- * json 형식을 채크한다.
- * 
- * @return boolean
- */
-function isJson($string)
+require('./simple_html_dom.php');
+class GnuboardUpdater
 {
-    json_decode($string);
-    return (json_last_error() == JSON_ERROR_NONE);
-}
-
-class GnuboardGithub
-{
-    protected $baseUri = 'https://api.github.com/repos/gnuboard';
-    protected $gnuRepoUri;
-    protected $gnuCommitUri;
+    protected $sirUri = 'https://sir.kr/';
+    protected $gnuBoradUri = '/g5_pds';
+    public $versionList = null;
+    public $currentVer = null;
+    public $latestVer = null;
 
     public function __construct()
     {
-        $this->gnuRepoUri = $this->baseUri . '/gnuboard5';
-        $this->gnuCommitUri = $this->gnuRepoUri . '/commits';
+        $this->sirGnu = $this->getHtml('/home/silnex/tmp/sir.html');
+        // $this->sirUri . $this->gnuBoradUri
+        
+        $this->versionList = $this->getVerList();
+
+        $this->currentVer = $this->getCurrentVer();
+        $this->latestVer = $this->getLatestVer();
+        $this->nextVer = $this->getNextVer();
     }
 
     /**
@@ -31,59 +27,17 @@ class GnuboardGithub
      * 
      * @return object|string
      */
-    public function get($uri, $param = null)
+    public function getHtml($uri, $param = null)
     {
-        if (extension_loaded('curl')) {
-            if (is_array($param)) {
-                $query = http_build_query($param);
-                $uri .= "?{$query}";
-            }
-            $ch = curl_init($uri);
-
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'gnuboard-updater');
-
-            $response = curl_exec($ch);
-
-            curl_close($ch);
-
-            if ($response !== false) {
-                return isJson($response) ? json_decode($response) : $response;
-            }
+        if (is_array($param)) {
+            $query = http_build_query($param);
+            $uri .= "?{$query}";
         }
-        throw new Exception('php-curl 패키지를 설치해주세요.');
+        return file_get_html($uri);
     }
 
     /**
-     * @param string $path
-     * commit list를 가져온다.
-     * $path가 설정 되어있을경우 $path에 commit list를 가져온다
-     * 
-     * @return object
-     */
-    public function getCommitList($path = null)
-    {
-        $path = $path ? ['path' => $path] : null;
-        return $this->get($this->gnuCommitUri, $path);
-    }
-}
-
-class GnuboardUpdater
-{
-    protected $currentVer = null;
-    protected $latestVer = null;
-    protected $github = null;
-
-    public function __construct()
-    {
-        $this->github = new GnuboardGithub();
-        $this->currentVer = $this->getCurrentVer();
-        $this->latestVer = $this->getLatestVer();
-    }
-
-    /**
-     * 그누보드 최신 버전을 가져오는 기능
+     * 그누보드 현재 버전을 가져오는 기능
      * 
      * @return string
      */
@@ -101,12 +55,48 @@ class GnuboardUpdater
      */
     public function getLatestVer()
     {
-        preg_match(
-            '/(5\.[0-9]\.[0-9]\.[0-9])/',
-            $this->github->getCommitList('/config.php')[0]->commit->message,
-            $matches
-        );
-        return $matches[1];
+        foreach ($this->versionList as $value) {
+            return $value;
+        }
+    }
+
+    /**
+     * 그누보드 버전 목록을 가져오는 기능
+     * 
+     * @return string
+     */
+    public function getVerList()
+    {
+        $versions = [];
+        $page = 1;
+        do {
+            foreach ($this->sirGnu->find('.title_link') as $title) {
+                if (!preg_match('/그누보드\s*(5\.[0-9]\.[0-9]\.[0-9])/', $title->innertext, $match)) {
+                    continue;
+                }
+                $versions[str_replace('.', '', $match[1])] = $match[1];
+            }
+            krsort($versions);
+            $page++;
+        } while (array_key_last($versions) > 5400);
+        return $versions;
+    }
+
+    /**
+     * 그누보드 다음 버전을 가져오는 기능
+     * 
+     * @return string
+     */
+    public function getNextVer()
+    {
+        $currentVer = str_replace('.', '', $this->currentVer);
+        $tmpVerlist = $this->versionList;
+        ksort($tmpVerlist);
+        foreach ($tmpVerlist as $key => $value) {
+            if ($currentVer < $key) {
+                return $value;
+            }
+        }
     }
 
     /**
@@ -119,7 +109,7 @@ class GnuboardUpdater
         if ($this->currentVer === $this->latestVer) {
             return null;
         } else {
-            return "현재 버전: {$this->currentVer} \n최신 버전: {$this->latestVer}";
+            return "현재 버전: {$this->currentVer} \n다음 버전: {$this->nextVer} \n최신 버전: {$this->latestVer}";
         }
     }
 }
