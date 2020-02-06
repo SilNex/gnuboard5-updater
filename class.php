@@ -199,5 +199,20 @@ class SIRParser extends Version implements SIRParserInterface
 
 class Updater
 {
-    // 
+    public function getFileList($path, &$files = [], $depth = 1, $removePath = __PATCH_DIR__)
+    {
+        foreach (glob($path) as $file) {
+            if (is_dir($file)) {
+                self::getFileList("$file/*", $files, $depth++);
+            } else {
+                $files[] = str_replace($removePath ,'' , $file);
+            }
+        }
+        return $files;
+    }
+
+    public function getPatchFileList()
+    {
+        return $this->getFileList(__PATCH_DIR__);
+    }
 }

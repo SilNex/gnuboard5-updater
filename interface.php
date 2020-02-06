@@ -52,7 +52,7 @@ interface SIRParserInterface
      * 
      * @return $path 압축해제 경로
      */
-    public function extract($compressedFile, $path = null);
+    public function extract(&$tarHeader, $path = null);
 
     /**
      * @param string $path 경로 안에 모든 모든 파일을 삭제한다.
