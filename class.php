@@ -40,10 +40,9 @@ class Version extends SplDoublyLinkedList implements VersionInterface
     }
 }
 
-class SIRParser implements SIRParserInterface
+class SIRParser extends Version implements SIRParserInterface
 {
     protected $sirBoardPattern = '/<a\shref=\"(.*)\"\sclass="title_link">\s+\[?(보안패치|정식버전|베타버전)?\]?\s?그누보드\s?(5\.4\.[0-9]\.[0-9])/';
-    protected $versionList = null;
 
     public function get($url, $param = [])
     {
@@ -73,23 +72,29 @@ class SIRParser implements SIRParserInterface
 
     public function parseVersionList()
     {
-        if (is_null($this->versionList)) {
+        if ($this->isEmpty()) {
             do {
                 $uri = "https://sir.kr/g5_pds";
                 $page = 1;
                 $response = $this->get($uri, ['page' => $page]);
                 preg_match_all($this->sirBoardPattern, $response, $matches);
-                $this->versionList = new Version();
                 for ($i = 0; $i < count($matches[0]); $i++) {
-                    $this->versionList->push((object) [
+                    $this->push((object) [
                         'href' => $matches[1][$i],
                         'info' => $matches[2][$i],
                         'version' => $matches[3][$i],
                     ]);
                 }
                 $page++;
-            } while ($this->versionList->top()->version < '5.4.0.0');
+            } while ($this->top()->version < '5.4.0.0');
         }
-        return $this->versionList;
+    }
+
+    public function parseDetail()
+    {
+        if ($this->isEmpty()) {
+            $this->parseVersionList(); 
+        }
+        
     }
 }
