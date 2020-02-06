@@ -93,8 +93,3 @@ class SIRParser implements SIRParserInterface
         return $this->versionList;
     }
 }
-
-$t = new SIRParser();
-
-$version = $t->parseVersionList();
-var_dump($version->getLatest());
