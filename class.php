@@ -51,6 +51,7 @@ class SIRParser extends Version implements SIRParserInterface
 {
     protected $sirBoardPattern = '/<a\shref=\"(.*)\"\sclass="title_link">\s+\[?(보안패치|정식버전|베타버전)?\]?\s?그누보드\s?(5\.4\.[0-9]\.[0-9])/';
     protected $sirAttachPattern = '/onclick=\"file_download\(\'(\/\/sir\.kr\/bbs\/download\.php.*)\',\s\'gnuboard5\.4\.[0-9]\.[0-9]\.patch\.tar\.gz\'\);\"/';
+    protected $githubUriPattern = '/>(https:\/\/github\.com\/gnuboard\/gnuboard5\/commit\/[a-z0-9]+)</';
 
     public function get($url, $param = [])
     {
@@ -106,10 +107,15 @@ class SIRParser extends Version implements SIRParserInterface
             $response = $this->get($this->href);
             if (preg_match_all($this->sirAttachPattern, $response, $match)) {
                 $this->patchHref = 'https:' . str_replace('download', 'download2', html_entity_decode($match[1]));
-                return $this;
             } else {
                 return "패치파일을 찾을 수 없습니다.";
             }
+
+            if (preg_match_all($this->githubUriPattern, $response, $matches)) {
+                $this->githubLinks = $matches[1];
+            }
+
+            return $this;
         }
     }
 }
