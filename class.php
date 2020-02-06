@@ -1,4 +1,6 @@
 <?php
+define('__PATCH_DIR__', __DIR__ . '/patch');
+
 class Version extends SplDoublyLinkedList
 {
     public function __construct($array = [])
@@ -33,7 +35,7 @@ class Version extends SplDoublyLinkedList
     public function getNext()
     {
         $version = $this->getCurrentVersionString();
-        for ($i = 0; $i < $this->count(); $i++) {
+        for ($i = ($this->count() - 1); $i > -1; $i--) {
             if ($version < $this->offsetGet($i)->version) {
                 return $this->offsetGet($i);
             }
@@ -53,7 +55,7 @@ class SIRParser extends Version implements SIRParserInterface
     protected $sirAttachPattern = '/onclick=\"file_download\(\'(\/\/sir\.kr\/bbs\/download\.php.*)\',\s\'gnuboard5\.4\.[0-9]\.[0-9]\.patch\.tar\.gz\'\);\"/';
     protected $githubUriPattern = '/>(https:\/\/github\.com\/gnuboard\/gnuboard5\/commit\/[a-z0-9]+)</';
 
-    public function get($url, $param = [])
+    public function get($url, $param = [], &$file = null)
     {
         if (empty($param)) {
             $query = http_build_query($param);
@@ -66,7 +68,9 @@ class SIRParser extends Version implements SIRParserInterface
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
             curl_setopt($ch, CURLOPT_USERAGENT, 'gnuboard-updater');
-
+            if (isset($file)) {
+                curl_setopt($ch, CURLOPT_FILE, $file);
+            }
             $response = curl_exec($ch);
 
             curl_close($ch);
@@ -75,7 +79,9 @@ class SIRParser extends Version implements SIRParserInterface
                 return $response;
             }
         } else {
-            return file_get_contents($url);
+            // create file code add
+            // return file_get_contents($url);
+            throw new Exception("php-curl이 없습니다.");
         }
     }
 
@@ -105,8 +111,9 @@ class SIRParser extends Version implements SIRParserInterface
             return "베타버전은 업데이트 되지 않습니다.";
         } else {
             $response = $this->get($this->href);
-            if (preg_match_all($this->sirAttachPattern, $response, $match)) {
+            if (preg_match($this->sirAttachPattern, $response, $match)) {
                 $this->patchHref = 'https:' . str_replace('download', 'download2', html_entity_decode($match[1]));
+                $this->fullHref = str_replace('&no=1', '&no=0', $this->patchHref);
             } else {
                 return "패치파일을 찾을 수 없습니다.";
             }
@@ -116,6 +123,51 @@ class SIRParser extends Version implements SIRParserInterface
             }
 
             return $this;
+        }
+    }
+
+    public function patchDownload()
+    {
+        if (!isset($this->patchHref)) {
+            $this->parseDetail();
+        }
+        if (!is_dir(__PATCH_DIR__)) {
+            mkdir(__PATCH_DIR__, 0777, true);
+        }
+        $this->patchTarPath = __PATCH_DIR__ . '/gnuboard' . $this->version . '.patch.tar.gz';
+        $patchFile = fopen($this->patchTarPath, 'w+');
+
+        $this->get($this->patchHref, [], $patchFile);
+        fclose($patchFile);
+
+        $this->patchFile = new PharData($this->patchTarPath);
+
+        return $this;
+    }
+
+    public function extract($path = null)
+    {
+        if (!isset($this->patchFile)) {
+            throw new Exception("패치 파일이 없습니다.");
+        }
+        $path = $path ?: __PATCH_DIR__;
+        $this->patchFile->extractTo($path, null, true);
+
+        self::rmrf($path . '/theme');
+        self::rmrf($path . '/skin');
+        self::rmrf($path . '/mobile/skin');
+        unset($this->patchFile);
+        self::rmrf($this->patchTarPath);
+    }
+
+    static public function rmrf($path) {
+        foreach (glob($path) as $file) {
+            if (is_dir($file)) { 
+                self::rmrf("$file/*");
+                rmdir($file);
+            } else {
+                unlink($file);
+            }
         }
     }
 }
