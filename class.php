@@ -108,14 +108,14 @@ class SIRParser extends Version implements SIRParserInterface
     public function parseDetail()
     {
         if (in_array($this->info, ['베타버전'])) {
-            return "베타버전은 업데이트 되지 않습니다.";
+            throw new Exception("베타버전은 업데이트 되지 않습니다.");
         } else {
             $response = $this->get($this->href);
             if (preg_match($this->sirAttachPattern, $response, $match)) {
                 $this->patchHref = 'https:' . str_replace('download', 'download2', html_entity_decode($match[1]));
                 $this->fullHref = str_replace('&no=1', '&no=0', $this->patchHref);
             } else {
-                return "패치파일을 찾을 수 없습니다.";
+                throw new Exception("패치파일을 찾을 수 없습니다.");
             }
 
             if (preg_match_all($this->githubUriPattern, $response, $matches)) {
@@ -131,38 +131,63 @@ class SIRParser extends Version implements SIRParserInterface
         if (!isset($this->patchHref)) {
             $this->parseDetail();
         }
-        if (!is_dir(__PATCH_DIR__)) {
-            mkdir(__PATCH_DIR__, 0777, true);
-        }
-        $this->patchTarPath = __PATCH_DIR__ . '/gnuboard' . $this->version . '.patch.tar.gz';
-        $patchFile = fopen($this->patchTarPath, 'w+');
 
-        $this->get($this->patchHref, [], $patchFile);
-        fclose($patchFile);
+        $this->patchTarFile = $this->download(
+            $this->patchHref,
+            __PATCH_DIR__,
+            'gnuboard' . $this->version . '.patch.tar.gz'
+        );
 
-        $this->patchFile = new PharData($this->patchTarPath);
+        $this->patchFile = new PharData($this->patchTarFile);
 
         return $this;
     }
 
-    public function extract($path = null)
+    public function download($url, $path, $fileName)
+    {
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
+        }
+
+        $filePath = $path . '/' . $fileName;
+        $fp = fopen($filePath, 'w+');
+
+        $this->get($url, [], $fp);
+        fclose($fp);
+
+        return $filePath;
+    }
+
+    public function extractPatchFile()
     {
         if (!isset($this->patchFile)) {
             throw new Exception("패치 파일이 없습니다.");
         }
-        $path = $path ?: __PATCH_DIR__;
-        $this->patchFile->extractTo($path, null, true);
 
+        $path = $this->extract($this->patchFile, __PATCH_DIR__);
+
+        // 스킨 파일 삭제
         self::rmrf($path . '/theme');
         self::rmrf($path . '/skin');
         self::rmrf($path . '/mobile/skin');
+
+        // 압축 파일 삭제
+        self::rmrf($this->patchTarFile);
         unset($this->patchFile);
-        self::rmrf($this->patchTarPath);
+
+        return $path;
     }
 
-    static public function rmrf($path) {
+    public function extract(&$tarHeader, $path = null)
+    {
+        $tarHeader->extractTo($path, null, true);
+        return $path;
+    }
+
+    static public function rmrf($path)
+    {
         foreach (glob($path) as $file) {
-            if (is_dir($file)) { 
+            if (is_dir($file)) {
                 self::rmrf("$file/*");
                 rmdir($file);
             } else {
@@ -170,4 +195,9 @@ class SIRParser extends Version implements SIRParserInterface
             }
         }
     }
+}
+
+class Updater
+{
+    // 
 }
