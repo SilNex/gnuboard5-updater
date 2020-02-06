@@ -1,5 +1,6 @@
 <?php
 define('__PATCH_DIR__', __DIR__ . '/patch');
+define('__FULL_DIR__', __DIR__ . '/full');
 
 class Version extends SplDoublyLinkedList
 {
@@ -143,6 +144,23 @@ class SIRParser extends Version implements SIRParserInterface
         return $this;
     }
 
+    public function fullVerDownload()
+    {
+        if (!isset($this->fullHref)) {
+            $this->parseDetail();
+        }
+
+        $this->fullTarFile = $this->download(
+            $this->fullHref,
+            __FULL_DIR__,
+            'gnuboard' . $this->version . '.tar.gz'
+        );
+
+        $this->fullFile = new PharData($this->fullTarFile);
+
+        return $this;
+    }
+
     public function download($url, $path, $fileName)
     {
         if (!is_dir($path)) {
@@ -178,6 +196,21 @@ class SIRParser extends Version implements SIRParserInterface
         return $path;
     }
 
+    public function extractFullFile()
+    {
+        if (!isset($this->fullFile)) {
+            throw new Exception("파일이 없습니다.");
+        }
+
+        $path = $this->extract($this->fullFile, __FULL_DIR__);
+
+        // 압축 파일 삭제
+        self::rmrf($this->fullTarFile);
+        unset($this->fullFile);
+
+        return $path;
+    }
+    
     public function extract(&$tarHeader, $path = null)
     {
         $tarHeader->extractTo($path, null, true);
@@ -214,5 +247,23 @@ class Updater
     public function getPatchFileList()
     {
         return $this->getFileList(__PATCH_DIR__);
+    }
+
+    public function getOriginFileList()
+    {
+        $files = [];
+        foreach ($this->getPatchFileList() as $path) {
+            $files[] = '/full' . $path;
+        }
+        return $files;
+    }
+
+    public function getUserFileList()
+    {
+        $files = [];
+        foreach ($this->getPatchFileList() as $path) {
+            $files[] = '.' . $path;
+        }
+        return $files;
     }
 }
