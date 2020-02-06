@@ -1,6 +1,13 @@
 <?php
-class Version extends SplDoublyLinkedList implements VersionInterface
+class Version extends SplDoublyLinkedList
 {
+    public function __construct($array = [])
+    {
+        foreach ($array as $key => $value) {
+            $this->$key = $value;
+        }
+    }
+
     protected function getCurrentVersionString()
     {
         $configString = file_get_contents(__DIR__ . '/config.php');
@@ -43,6 +50,7 @@ class Version extends SplDoublyLinkedList implements VersionInterface
 class SIRParser extends Version implements SIRParserInterface
 {
     protected $sirBoardPattern = '/<a\shref=\"(.*)\"\sclass="title_link">\s+\[?(보안패치|정식버전|베타버전)?\]?\s?그누보드\s?(5\.4\.[0-9]\.[0-9])/';
+    protected $sirAttachPattern = '/onclick=\"file_download\(\'(\/\/sir\.kr\/bbs\/download\.php.*)\',\s\'gnuboard5\.4\.[0-9]\.[0-9]\.patch\.tar\.gz\'\);\"/';
 
     public function get($url, $param = [])
     {
@@ -79,11 +87,11 @@ class SIRParser extends Version implements SIRParserInterface
                 $response = $this->get($uri, ['page' => $page]);
                 preg_match_all($this->sirBoardPattern, $response, $matches);
                 for ($i = 0; $i < count($matches[0]); $i++) {
-                    $this->push((object) [
-                        'href' => $matches[1][$i],
+                    $this->push(new SIRParser([
+                        'href' => "https:" . $matches[1][$i],
                         'info' => $matches[2][$i],
-                        'version' => $matches[3][$i],
-                    ]);
+                        'version' => $matches[3][$i]
+                    ]));
                 }
                 $page++;
             } while ($this->top()->version < '5.4.0.0');
@@ -92,9 +100,16 @@ class SIRParser extends Version implements SIRParserInterface
 
     public function parseDetail()
     {
-        if ($this->isEmpty()) {
-            $this->parseVersionList(); 
+        if (in_array($this->info, ['베타버전'])) {
+            return "베타버전은 업데이트 되지 않습니다.";
+        } else {
+            $response = $this->get($this->href);
+            if (preg_match_all($this->sirAttachPattern, $response, $match)) {
+                $this->patchHref = 'https:' . str_replace('download', 'download2', html_entity_decode($match[1]));
+                return $this;
+            } else {
+                return "패치파일을 찾을 수 없습니다.";
+            }
         }
-        
     }
 }

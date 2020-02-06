@@ -5,4 +5,4 @@ require (__DIR__ . '/class.php');
 $t = new SIRParser();
 
 $t->parseVersionList();
-var_dump($t->getLatest());
+echo $t->getLatest()->parseDetail();

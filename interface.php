@@ -15,15 +15,3 @@ interface SIRParserInterface
      */
     public function parseVersionList();
 }
-
-interface VersionInterface
-{
-    /**
-     * 최신, 다음, 현재 Version 클래스를 반환한다.
-     * 
-     * @return VersionInterface
-     */
-    public function getLatest();
-    public function getNext();
-    public function getCurrent();
-}
