@@ -1,6 +1,7 @@
 <?php
-define('__PATCH_DIR__', __DIR__ . '/patch');
-define('__ORIGIN_DIR__', __DIR__ . '/origin');
+define('__GNU_DIR__', __DIR__ . '/web/');
+define('__PATCH_DIR__', __DIR__ . '/patch/');
+define('__ORIGIN_DIR__', __DIR__ . '/origin/');
 
 class Version extends SplDoublyLinkedList
 {
@@ -13,7 +14,7 @@ class Version extends SplDoublyLinkedList
 
     protected function getCurrentVersionString()
     {
-        $configString = file_get_contents(__DIR__ . '/config.php');
+        $configString = file_get_contents(__GNU_DIR__ . '/config.php');
         preg_match('/\(\'G5_GNUBOARD_VER\',\s\'([0-9.]+)\'\)\;/', $configString, $match);
         return $match[1];
     }
@@ -50,12 +51,17 @@ class Version extends SplDoublyLinkedList
     }
 }
 
-class SIRParser extends Version implements SIRParserInterface
+class SIRParser extends Version
 {
     protected $sirBoardPattern = '/<a\shref=\"(.*)\"\sclass="title_link">\s+\[?(보안패치|정식버전|베타버전)?\]?\s?그누보드\s?(5\.4\.[0-9]\.[0-9])/';
     protected $sirAttachPattern = '/onclick=\"file_download\(\'(\/\/sir\.kr\/bbs\/download\.php.*)\',\s\'gnuboard5\.4\.[0-9]\.[0-9]\.patch\.tar\.gz\'\);\"/';
     protected $githubUriPattern = '/>(https:\/\/github\.com\/gnuboard\/gnuboard5\/commit\/[a-z0-9]+)</';
 
+    /**
+     * html페이지를 가져온다.
+     * 
+     * @return string
+     */
     public function get($url, $param = [], &$file = null)
     {
         if (empty($param)) {
@@ -85,7 +91,12 @@ class SIRParser extends Version implements SIRParserInterface
             throw new Exception("php-curl이 없습니다.");
         }
     }
-
+    
+    /**
+     * 다운로드 페이지에서 Version 클래스를 반환한다.
+     * 
+     * @return SIRParser
+     */
     public function parseVersionList()
     {
         if ($this->isEmpty()) {
@@ -106,6 +117,11 @@ class SIRParser extends Version implements SIRParserInterface
         }
     }
 
+    /**
+     * 해당 버전에 대한 자세한 정보(download link, github link) 수집.
+     * 
+     * @return SIRParser
+     */
     public function parseDetail()
     {
         if (in_array($this->info, ['베타버전'])) {
@@ -144,6 +160,11 @@ class SIRParser extends Version implements SIRParserInterface
         return $this;
     }
 
+    /**
+     * 현재 버전의 패치파일을 다운로드합니다.
+     * 
+     * @return SIRParser
+     */
     public function originVerDownload()
     {
         if (!isset($this->originHref)) {
@@ -161,6 +182,14 @@ class SIRParser extends Version implements SIRParserInterface
         return $this;
     }
 
+    /**
+     * @param string $path 저장 경로
+     * @param string $url 다운로드 링크
+     * @param string $fileName 파일명
+     * $url의 파일을 $path에 $fileName으로 저장함
+     * 
+     * @return string 다운로드한 파일 경로
+     */
     public function download($url, $path, $fileName)
     {
         if (!is_dir($path)) {
@@ -176,6 +205,12 @@ class SIRParser extends Version implements SIRParserInterface
         return $filePath;
     }
 
+    /**
+     * 현재 버전의 패치파일을 압축해제
+     * skin, theme, mobile/skin을 삭제
+     * 
+     * @return string 압축해제 경로
+     */
     public function extractPatchFile()
     {
         if (!isset($this->patchFile)) {
@@ -196,6 +231,11 @@ class SIRParser extends Version implements SIRParserInterface
         return $path;
     }
 
+    /**
+     * @param string $path 압축 해제 경로
+     * 
+     * @return $path 압축해제 경로
+     */
     public function extractOriginFile()
     {
         if (!isset($this->originFile)) {
@@ -217,11 +257,16 @@ class SIRParser extends Version implements SIRParserInterface
         return $path;
     }
 
+    /**
+     * @param string $path 경로 안에 모든 모든 파일을 삭제한다.
+     * 
+     * @return void
+     */
     static public function rmrf($path)
     {
-        foreach (glob($path, GLOB_MARK | GLOB_BRACE) as $file) {
+        foreach (glob($path, GLOB_MARK|GLOB_BRACE) as $file) {
             if (is_dir($file)) {
-                self::rmrf("$file/*");
+                self::rmrf($file . '{,.}[!.,!..]*');
                 rmdir($file);
             } else {
                 unlink($file);
@@ -230,12 +275,12 @@ class SIRParser extends Version implements SIRParserInterface
     }
 }
 
-class Updater extends SIRParser
+class Updater
 {
-    public $patchPath = './patch';
-    public $userPath = './';
-    public $originPath = './origin';
-    public $backupPath = './backup';
+    public $patchPath = './patch/';
+    public $userPath = __GNU_DIR__;
+    public $originPath = './origin/';
+    public $backupPath = './backup/';
 
     public $baseFiles = [];
     public $patchFiles = [];
@@ -243,21 +288,22 @@ class Updater extends SIRParser
     public $originFiles = [];
     public $backupFiles = [];
 
-    public $diff = [];
+    public $diffFiles = [];
 
     public function __construct()
     {
         if (!is_dir($this->patchPath) && !is_dir($this->originPath)) {
-            $this->parseVersionList();
-            $this->getNext()->patchDownload()->extractPatchFile();
-            $this->getCurrent()->originVerDownload()->extractOriginFile();
+            $parser = new SIRParser();
+            $parser->parseVersionList();
+            $parser->getNext()->patchDownload()->extractPatchFile();
+            $parser->getCurrent()->originVerDownload()->extractOriginFile();
+        }
+        
+        $this->getFileList($this->patchPath);
+        $this->setDiffFiles();
 
-            $this->getFileList($this->patchPath);
-            $this->setDiffFiles();
-
-            if (!is_dir($this->backupPath)) {
-                mkdir($this->backupPath, 0777, true);
-            }
+        if (!is_dir($this->backupPath)) {
+            mkdir($this->backupPath, 0777, true);
         }
     }
 
@@ -281,17 +327,27 @@ class Updater extends SIRParser
         for ($i = 0; $i < count($this->userFiles); $i++) {
             if (file_get_contents($this->userFiles[$i]) !== file_get_contents($this->originFiles[$i])) {
                 echo "diff {$this->userFiles[$i]} <=> {$this->originFiles[$i]}" . PHP_EOL;
-                $this->diff[] = $this->userFiles[$i];
+                $this->diffFiles[] = $this->userFiles[$i];
             }
         }
     }
 
+    public function hasDiff()
+    {
+        return empty($this->diffFiles) ? false : true;
+    }
+
     public function patch()
     {
-        $this->backup();
-
-        for ($i = 0; $i < count($this->userFiles); $i++) {
-            copy($this->patchFiles[$i], $this->userFiles[$i]);
+        if ($this->hasDiff()) {
+            return false;
+        } else {
+            $this->backup();
+    
+            for ($i = 0; $i < count($this->userFiles); $i++) {
+                copy($this->patchFiles[$i], $this->userFiles[$i]);
+            }
+            return true;
         }
     }
 
@@ -315,10 +371,10 @@ class Updater extends SIRParser
 
     public function removePatchFiles($withBackup = false)
     {
-        self::rmrf($this->originPath);
-        self::rmrf($this->patchPath);
+        SIRParser::rmrf($this->originPath);
+        SIRParser::rmrf($this->patchPath);
         if ($withBackup) {
-            self::rmrf($this->backupPath);
+            SIRParser::rmrf($this->backupPath);
         }
     }
 }
