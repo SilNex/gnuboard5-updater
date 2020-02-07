@@ -210,7 +210,7 @@ class SIRParser extends Version implements SIRParserInterface
 
         return $path;
     }
-    
+
     public function extract(&$tarHeader, $path = null)
     {
         $tarHeader->extractTo($path, null, true);
@@ -238,7 +238,7 @@ class Updater
             if (is_dir($file)) {
                 self::getFileList("$file/*", $files, $depth++);
             } else {
-                $files[] = str_replace($removePath ,'' , $file);
+                $files[] = str_replace($removePath, '', $file);
             }
         }
         return $files;
@@ -246,13 +246,22 @@ class Updater
 
     public function getPatchFileList()
     {
+        $files = [];
+        foreach ($this->getFileList(__PATCH_DIR__) as $path) {
+            $files[] = './patch' . $path;
+        }
+        return $files;
+    }
+
+    public function getFileListBase()
+    {
         return $this->getFileList(__PATCH_DIR__);
     }
 
     public function getOriginFileList()
     {
         $files = [];
-        foreach ($this->getPatchFileList() as $path) {
+        foreach ($this->getFileListBase() as $path) {
             $files[] = './full' . $path;
         }
         return $files;
@@ -261,7 +270,7 @@ class Updater
     public function getUserFileList()
     {
         $files = [];
-        foreach ($this->getPatchFileList() as $path) {
+        foreach ($this->getFileListBase() as $path) {
             $files[] = '.' . $path;
         }
         return $files;
@@ -272,14 +281,40 @@ class Updater
         $userFiles = $this->getUserFileList();
         $originFiles = $this->getOriginFileList();
         $diff = [];
-        for ($i=0; $i < count($userFiles); $i++) { 
-            if (file_get_contents($userFiles[$i]) !== file_get_contents($originFiles[$i]))
-            {
+        for ($i = 0; $i < count($userFiles); $i++) {
+            if (file_get_contents($userFiles[$i]) !== file_get_contents($originFiles[$i])) {
                 echo "diff {$userFiles[$i]} <=> {$originFiles[$i]}" . PHP_EOL;
                 $diff[] = $userFiles[$i];
             }
         }
         return $diff;
     }
-    
+
+    public function patch()
+    {
+        $userFiles = $this->getUserFileList();
+        $patchFiles = $this->getPatchFileList();
+
+        $this->backup($userFiles);
+
+
+        for ($i = 0; $i < count($userFiles); $i++) {
+            copy($patchFiles[$i], $userFiles[$i]);
+        }
+    }
+
+    public function backup($files)
+    {
+        $backupPath = './backup';
+        if (!is_dir('./backup')) {
+            mkdir('./backup', 0777, true);
+        }
+        foreach ($files as $file) {
+            $backupFilePath = str_replace('.', $backupPath, dirname($file));
+            if (!is_dir($backupFilePath)) {
+                mkdir($backupFilePath, 0777, true);
+            }
+            copy($file, $backupFilePath . '/' . basename($file));
+        }
+    }
 }

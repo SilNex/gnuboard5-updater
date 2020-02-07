@@ -15,6 +15,6 @@ $t = new SIRParser();
 //     ->extractFullFile();
 
 $updater = new Updater();
-if (empty($up->diffOriginUserFiles())) {
-    $up->overWritePatchFile();
+if (empty($updater->diffOriginUserFiles())) {
+    $updater->patch();
 }
