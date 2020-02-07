@@ -253,7 +253,7 @@ class Updater
     {
         $files = [];
         foreach ($this->getPatchFileList() as $path) {
-            $files[] = '/full' . $path;
+            $files[] = './full' . $path;
         }
         return $files;
     }
@@ -266,4 +266,20 @@ class Updater
         }
         return $files;
     }
+
+    public function diffOriginUserFiles()
+    {
+        $userFiles = $this->getUserFileList();
+        $originFiles = $this->getOriginFileList();
+        $diff = [];
+        for ($i=0; $i < count($userFiles); $i++) { 
+            if (file_get_contents($userFiles[$i]) !== file_get_contents($originFiles[$i]))
+            {
+                echo "diff {$userFiles[$i]} <=> {$originFiles[$i]}" . PHP_EOL;
+                $diff[] = $userFiles[$i];
+            }
+        }
+        return $diff;
+    }
+    
 }

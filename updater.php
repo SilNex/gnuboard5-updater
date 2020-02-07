@@ -14,5 +14,7 @@ $t = new SIRParser();
 //     ->fullVerDownload()
 //     ->extractFullFile();
 
-$up = new Updater();
-var_dump($up->getUserFileList());
+$updater = new Updater();
+if (empty($up->diffOriginUserFiles())) {
+    $up->overWritePatchFile();
+}
