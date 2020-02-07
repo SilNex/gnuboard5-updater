@@ -267,8 +267,9 @@ class Updater
         return $files;
     }
 
-    public function getUserFileList()
+    public function getUserFileList($path = null)
     {
+        // path user파일 가져오기
         $files = [];
         foreach ($this->getFileListBase() as $path) {
             $files[] = '.' . $path;
@@ -297,7 +298,6 @@ class Updater
 
         $this->backup($userFiles);
 
-
         for ($i = 0; $i < count($userFiles); $i++) {
             copy($patchFiles[$i], $userFiles[$i]);
         }
@@ -315,6 +315,17 @@ class Updater
                 mkdir($backupFilePath, 0777, true);
             }
             copy($file, $backupFilePath . '/' . basename($file));
+        }
+    }
+    
+    public function restore()
+    {
+        $backupPath = './backup';
+        $backupFiles = $this->getFileList($backupPath);
+        $userFiles = $this->getUserFileList($backupPath);
+        
+        for ($i=0; $i < count($backupFiles); $i++) { 
+            copy($backupFiles[$i], $userFiles[$i]);
         }
     }
 }

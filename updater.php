@@ -17,4 +17,6 @@ $t = new SIRParser();
 $updater = new Updater();
 if (empty($updater->diffOriginUserFiles())) {
     $updater->patch();
+} else {
+    var_dump($updater->restore());
 }
