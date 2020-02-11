@@ -335,7 +335,7 @@ class Updater
         return empty($this->diffFiles) ? false : true;
     }
 
-    public function patch()
+    public function update($force = false)
     {
         if ($this->hasDiff()) {
             return false;
