@@ -1,5 +1,5 @@
 <?php
-include('updaterConfig.php');
+include('gnuUpConfig.php');
 
 class Version extends SplDoublyLinkedList
 {
