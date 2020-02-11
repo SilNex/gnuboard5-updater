@@ -37,3 +37,6 @@ php updater.php
 - [x] Updater class 리펙토링
 - [ ] 그누보드 관리자 UI만들기
 - ETC . . .
+
+## 잡설
+나름 신경쓰면서 만들었는데 생각보다 코드가 더럽다..
