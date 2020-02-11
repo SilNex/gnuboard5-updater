@@ -290,7 +290,7 @@ class Updater
 
     public function __construct()
     {
-        if (!is_dir($this->patchPath) && !is_dir($this->originPath)) {
+        if (!is_dir($this->patchPath) || !is_dir($this->originPath)) {
             $parser = new SIRParser();
             $parser->parseVersionList();
             $parser->getNext()->patchDownload()->extractPatchFile();
@@ -337,7 +337,7 @@ class Updater
 
     public function update($force = false)
     {
-        if ($this->hasDiff()) {
+        if ($this->hasDiff() && !$force) {
             return false;
         } else {
             $this->backup();
@@ -351,6 +351,9 @@ class Updater
 
     public function backup()
     {
+        if (is_dir($this->backupPath)) {
+            throw new Exception("벡업파일이 이미 백업파일이 존재합니다.");
+        }
         foreach ($this->userFiles as $file) {
             $backupFilePath = str_replace('.', $this->backupPath, dirname($file));
             if (!is_dir($backupFilePath)) {
@@ -362,6 +365,9 @@ class Updater
 
     public function restore()
     {
+        if (!is_dir($this->backupPath)) {
+            throw new Exception("벡업파일이 존재하지 않습니다.");
+        }
         for ($i = 0; $i < count($this->backupFiles); $i++) {
             copy($this->backupFiles[$i], $this->userFiles[$i]);
         }
