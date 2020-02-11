@@ -5,12 +5,18 @@
 최대한 PSR를 지키며 개발  
 최소 PHP 5.6.x 버전 까지 지원  
 최대한 간편한 설치
-
-## 감사인사
-그누보드를 많이 사용하며 여러 면에서 감사한 마음을 담아 제작해 보았습니다.
-
-## MIT 라이센스
 누구나 수정 배포가 가능하며 상업적이용이 가능합니다.
+
+## 사용법
+`public_html` 와 같은 위치에 파일을 넣고 `php updater.php`로 실행 시켜줍니다.
+
+### 예시
+```bash
+cd /public_html_path/
+git clone https://github.com/SilNex/gnuboard5-updater.git
+mv ./gnuboard5-updater/* ./
+php updater.php
+```
 
 ## Todo
 - [x] sir.kr로 부터 그누보드 버전 리스트 가져오기

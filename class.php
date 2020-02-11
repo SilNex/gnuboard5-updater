@@ -1,7 +1,5 @@
 <?php
-define('__GNU_DIR__', __DIR__ . '/web/');
-define('__PATCH_DIR__', __DIR__ . '/patch/');
-define('__ORIGIN_DIR__', __DIR__ . '/origin/');
+include('updaterConfig.php');
 
 class Version extends SplDoublyLinkedList
 {
@@ -277,10 +275,10 @@ class SIRParser extends Version
 
 class Updater
 {
-    public $patchPath = './patch/';
+    public $patchPath = __PATCH_DIR__;
     public $userPath = __GNU_DIR__;
-    public $originPath = './origin/';
-    public $backupPath = './backup/';
+    public $originPath = __ORIGIN_DIR__;
+    public $backupPath = __BACKUP_DIR__;
 
     public $baseFiles = [];
     public $patchFiles = [];

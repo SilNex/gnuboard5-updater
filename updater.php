@@ -1,5 +1,4 @@
 <?php
-require(__DIR__ . '/interface.php');
 require(__DIR__ . '/class.php');
 
 $updater = new Updater();
