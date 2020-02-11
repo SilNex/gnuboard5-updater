@@ -35,10 +35,10 @@ switch ($argv[1]) {
 
     case 'diff':
         if (count($updater->diffFiles) > 0) {
-            echo "오리지널 버전과 다른파일 목록 입니다.";
+            echo "오리지널 버전과 다른파일 목록 입니다.\n";
             print_r($updater->diffFiles);
         } else {
-            echo "오리지널 버전과 다른파일이 없습니다.";
+            echo "오리지널 버전과 다른파일이 없습니다.\n";
         }
         break;
 
