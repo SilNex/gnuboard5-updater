@@ -12,6 +12,9 @@ class Version extends SplDoublyLinkedList
 
     protected function getCurrentVersionString()
     {
+        if (!file_exists(__GNU_DIR__ . '/config.php')) {
+            throw new Exception("\nconfig.php 파일을 찾을 수 없습니다. \n그누보드 경로를 확인해주세요.\n현재 경로:" . __GNU_DIR__ . PHP_EOL);
+        }
         $configString = file_get_contents(__GNU_DIR__ . '/config.php');
         preg_match('/\(\'G5_GNUBOARD_VER\',\s\'([0-9.]+)\'\)\;/', $configString, $match);
         return $match[1];
@@ -89,7 +92,7 @@ class SIRParser extends Version
             throw new Exception("php-curl이 없습니다.");
         }
     }
-    
+
     /**
      * 다운로드 페이지에서 Version 클래스를 반환한다.
      * 
@@ -262,7 +265,7 @@ class SIRParser extends Version
      */
     static public function rmrf($path)
     {
-        foreach (glob($path, GLOB_MARK|GLOB_BRACE) as $file) {
+        foreach (glob($path, GLOB_MARK | GLOB_BRACE) as $file) {
             if (is_dir($file)) {
                 self::rmrf($file . '{,.}[!.,!..]*');
                 rmdir($file);
@@ -296,7 +299,7 @@ class Updater
             $parser->getNext()->patchDownload()->extractPatchFile();
             $parser->getCurrent()->originVerDownload()->extractOriginFile();
         }
-        
+
         $this->getFileList($this->patchPath);
         $this->setDiffFiles();
 
@@ -341,7 +344,7 @@ class Updater
             return false;
         } else {
             $this->backup();
-    
+
             for ($i = 0; $i < count($this->userFiles); $i++) {
                 copy($this->patchFiles[$i], $this->userFiles[$i]);
             }
