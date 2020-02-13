@@ -17,7 +17,7 @@ class Version extends SplDoublyLinkedList
         }
         $configString = file_get_contents(__GNU_DIR__ . '/config.php');
         preg_match('/\(\'G5_GNUBOARD_VER\',\s\'([0-9.]+)\'\)\;/', $configString, $match);
-        return $match[1];
+        return isset($match[1]) ? $match[1] : null;
     }
 
     public function findInfo($version)
@@ -38,17 +38,25 @@ class Version extends SplDoublyLinkedList
     public function getNext()
     {
         $version = $this->getCurrentVersionString();
-        for ($i = ($this->count() - 1); $i > -1; $i--) {
-            if ($version < $this->offsetGet($i)->version) {
-                return $this->offsetGet($i);
+        if (isset($version)) {
+            for ($i = ($this->count() - 1); $i > -1; $i--) {
+                if ($version < $this->offsetGet($i)->version) {
+                    return $this->offsetGet($i);
+                }
             }
+        } else {
+            return null;
         }
-        return null;
     }
 
     public function getCurrent()
     {
-        return $this->findInfo($this->getCurrentVersionString());
+        $version = $this->getCurrentVersionString();
+        if (isset($version)) {
+            return $this->findInfo($version);
+        } else {
+            return null;
+        }
     }
 }
 
@@ -65,6 +73,7 @@ class SIRParser extends Version
      */
     public function get($url, $param = [], &$file = null)
     {
+        echo "==========get 메소드가 호출되었습니다.==========\n$url\n";
         if (empty($param)) {
             $query = http_build_query($param);
             $url .= "?{$query}";
@@ -184,6 +193,27 @@ class SIRParser extends Version
     }
 
     /**
+     * @param string $version
+     * $version 버전의 풀버전을 다운로드합니다.
+     * 
+     * @return void
+     */
+    public function versionDownload($version)
+    {
+        $downloadFile = str_replace('.', '_', $version);
+        $downloadPath = __DIR__ . '/' . $downloadFile;
+        if (is_dir($downloadPath)) {
+            throw new Exception("{$version} 버전의 폴더가 이미 존재합니다.\n");
+        }
+        if ($downloadVersion = $this->findInfo($version)) {
+            $downloadVersion->parseDetail();
+            $this->download($downloadVersion->originHref, $downloadPath, $downloadFile . '.tar.gz');
+        } else {
+            throw new Exception("{$version}을 찾을수 없습니다.\n베타버전과 5.4미만 버전은 지원되지 않습니다.\n");
+        }
+    }
+
+    /**
      * @param string $path 저장 경로
      * @param string $url 다운로드 링크
      * @param string $fileName 파일명
@@ -291,13 +321,19 @@ class Updater
 
     public $diffFiles = [];
 
+    public $parser;
+
     public function __construct()
     {
         if (!is_dir($this->patchPath) || !is_dir($this->originPath)) {
-            $parser = new SIRParser();
-            $parser->parseVersionList();
-            $parser->getNext()->patchDownload()->extractPatchFile();
-            $parser->getCurrent()->originVerDownload()->extractOriginFile();
+            if (!isset($this->parser)) {
+                $this->parser = new SIRParser();
+                $this->parser->parseVersionList();
+            }
+            if (!is_null($this->parser->getCurrent())) {
+                $this->parser->getNext()->patchDownload()->extractPatchFile();
+                $this->parser->getCurrent()->originVerDownload()->extractOriginFile();
+            }
         }
 
         $this->getFileList($this->patchPath);
