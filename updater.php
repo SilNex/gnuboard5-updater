@@ -327,11 +327,11 @@ class Updater
 
     public function __construct()
     {
-        $this->parser = new SIRParser();
+        if (!isset($this->parser)) {
+            $this->parser = new SIRParser();
+            $this->parser->parseVersionList();
+        }
         if (!is_dir($this->patchPath) || !is_dir($this->originPath)) {
-            if (!isset($this->parser)) {
-                $this->parser->parseVersionList();
-            }
             if (!is_null($this->parser->getCurrent())) {
                 $this->parser->getNext()->patchDownload()->extractPatchFile();
                 $this->parser->getCurrent()->originVerDownload()->extractOriginFile();
