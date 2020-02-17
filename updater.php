@@ -76,7 +76,6 @@ class SIRParser extends Version
      */
     public function get($url, $param = [], &$file = null)
     {
-        echo "==========get 메소드가 호출되었습니다.==========\n$url\n";
         if (empty($param)) {
             $query = http_build_query($param);
             $url .= "?{$query}";
@@ -328,9 +327,9 @@ class Updater
 
     public function __construct()
     {
+        $this->parser = new SIRParser();
         if (!is_dir($this->patchPath) || !is_dir($this->originPath)) {
             if (!isset($this->parser)) {
-                $this->parser = new SIRParser();
                 $this->parser->parseVersionList();
             }
             if (!is_null($this->parser->getCurrent())) {
