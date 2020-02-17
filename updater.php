@@ -365,7 +365,6 @@ class Updater
     {
         for ($i = 0; $i < count($this->userFiles); $i++) {
             if (file_get_contents($this->userFiles[$i]) !== file_get_contents($this->originFiles[$i])) {
-                echo "diff {$this->userFiles[$i]} <=> {$this->originFiles[$i]}" . PHP_EOL;
                 $this->diffFiles[] = $this->userFiles[$i];
             }
         }
@@ -438,11 +437,14 @@ switch ($argv[1]) {
         break;
 
     case 'update':
-        $force = $argv[2] === '--forece' ? true : false;
+        if (isset($argv[2])) {
+            $force = $argv[2] === '--forece' ? true : false;
+        }
         if ($updater->update($force)) {
-            echo '패치가 완료되었습니다.';
+            echo '패치가 완료되었습니다.' . PHP_EOL;
+            $updater->removePatchFiles();
         } else {
-            echo '패치할 파일에 변경사항이 있습니다.';
+            echo '패치할 파일에 변경사항이 있습니다.' . PHP_EOL;
             var_dump($updater->diffFiles);
         }
         break;
@@ -473,7 +475,9 @@ switch ($argv[1]) {
         break;
 
     case 'clear':
-        $withBackup = $argv[2] === '--backup' ? true : false;
+        if (isset($argv[2])) {
+            $withBackup = $argv[2] === '--backup' ? true : false;
+        }
         $updater->removePatchFiles($withBackup);
         break;
 
