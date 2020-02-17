@@ -15,9 +15,9 @@ skin폴더와 theme폴더는 업데이트 되지 않습니다.
 ### 스크립트
 ```shell
 cd /var/www/
-git clone https://github.com/SilNex/gnuboard5-updater.git
-mv ./gnuboard5-updater/* ./
-php updater.php
+wget https://raw.githubusercontent.com/SilNex/gnuboard5-updater/master/updater.php
+php updater.php init
+php updater.php update
 ```
 
 ## Todo

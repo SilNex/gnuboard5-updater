@@ -47,6 +47,7 @@ class Version extends SplDoublyLinkedList
                     return $this->offsetGet($i);
                 }
             }
+            return $this->bottom();
         } else {
             return null;
         }
@@ -333,8 +334,12 @@ class Updater
         }
         if (!is_dir($this->patchPath) || !is_dir($this->originPath)) {
             if (!is_null($this->parser->getCurrent())) {
+                echo "패치 파일 다운로드중..." . PHP_EOL;
                 $this->parser->getNext()->patchDownload()->extractPatchFile();
+                echo "패치 파일 다운로드 완료" . PHP_EOL;
+                echo "현재버전 오리지널 파일 다운로드중..." . PHP_EOL;
                 $this->parser->getCurrent()->originVerDownload()->extractOriginFile();
+                echo "오리지널 다운로드 완료" . PHP_EOL;
             }
         }
 
@@ -421,9 +426,24 @@ class Updater
 }
 
 
-$updater = new Updater();
+/**
+ * Main
+ */
+
 $argv[1] = isset($argv[1]) ? $argv[1] : null;
+if (is_dir(__GNU_DIR__ . '/config.php')) {
+    die('먼저 그누보드를 설치해주세요' . PHP_EOL);
+} elseif ($argv[1] !== 'init' && !is_dir(__PATCH_DIR__) && !is_dir(__ORIGIN_DIR__) && !is_dir(__BACKUP_DIR__)) {
+    die('updater init 명령어를 먼저 실행시켜주세요' . PHP_EOL);
+}
+$updater = new Updater();
 switch ($argv[1]) {
+    case 'init':
+        echo '현재 버전' . $updater->parser->getCurrent()->version . PHP_EOL;
+        echo '다음 버전' . $updater->parser->getNext()->version . PHP_EOL;
+        echo '최신 버전' . $updater->parser->getLatest()->version . PHP_EOL;
+        break;
+
     case 'current':
         echo $updater->parser->getCurrent()->version . PHP_EOL;
         break;
@@ -437,9 +457,7 @@ switch ($argv[1]) {
         break;
 
     case 'update':
-        if (isset($argv[2])) {
-            $force = $argv[2] === '--forece' ? true : false;
-        }
+            $force = (isset($argv[2]) && $argv[2] === '--forece') ? true : false;
         if ($updater->update($force)) {
             echo '패치가 완료되었습니다.' . PHP_EOL;
             $updater->removePatchFiles();
@@ -475,9 +493,7 @@ switch ($argv[1]) {
         break;
 
     case 'clear':
-        if (isset($argv[2])) {
-            $withBackup = $argv[2] === '--backup' ? true : false;
-        }
+        $withBackup = (isset($argv[2]) && $argv[2] === '--backup') ? true : false;
         $updater->removePatchFiles($withBackup);
         break;
 
@@ -489,7 +505,7 @@ switch ($argv[1]) {
         echo "$cmd update [--force]\t: 그누보드를 다음 버전으로 패치를 진행합니다.[--force: 변경 파일이 있어도 강제로 덮어 씌웁니다.]\n";
         echo "$cmd restore\t: 패치전 백업버전으로 되돌립니다.\n";
         echo "$cmd backup\t: 다음버전에서 수정되는 파일들을 백업합니다.\n";
-        echo "$cmd download {version} [--extract]\t: {version}의 풀버전 파일을 다운합니다. [--extract : 다운로드파일을 압축 해제 합니다.]\n";
+        echo "$cmd download {version}\t: {version}의 풀버전 파일을 다운합니다.\n";
         echo "$cmd diff\t: 현재 버전의 오리지널 파일과 다른파일 목록을 출력합니다.\n";
         echo "$cmd clear [--backup]\t: 패치, 오리지널 파일을 삭제합니다. [--backup: 백업파일도 함께 삭제합니다.]\n";
         break;
