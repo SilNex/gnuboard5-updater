@@ -392,9 +392,6 @@ class Updater
 
     public function backup()
     {
-        if (is_dir($this->backupPath)) {
-            throw new Exception("벡업파일이 이미 백업파일이 존재합니다.");
-        }
         foreach ($this->userFiles as $file) {
             $backupFilePath = str_replace('.', $this->backupPath, dirname($file));
             if (!is_dir($backupFilePath)) {
