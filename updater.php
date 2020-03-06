@@ -457,7 +457,7 @@ switch ($argv[1]) {
         break;
 
     case 'update':
-            $force = (isset($argv[2]) && $argv[2] === '--forece') ? true : false;
+            $force = (isset($argv[2]) && $argv[2] === '--force') ? true : false;
         if ($updater->update($force)) {
             echo '패치가 완료되었습니다.' . PHP_EOL;
             $updater->removePatchFiles();
