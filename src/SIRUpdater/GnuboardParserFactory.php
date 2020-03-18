@@ -29,5 +29,4 @@ class GnuboardParserFactory implements ParserFactoryInterface
     {
         return $this->postListPattern;
     }
-
 }
