@@ -3,7 +3,7 @@
 namespace silnex\SIRUpdater;
 
 use Exception;
-use silnex\Util\Curl;
+use silnex\Util\Downloader;
 
 class Updater
 {
@@ -32,7 +32,7 @@ class Updater
         $downloadLink = $data['detail']['patch'];
         $fileName = $data['version'] . '.patch.tar.gz';
         $storePath = $this->patchPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'patch';
-        $this->download($downloadLink, $fileName, $storePath);
+        Downloader::download($downloadLink, $fileName, $storePath);
         return $storePath . DIRECTORY_SEPARATOR . $fileName;
     }
 
@@ -41,7 +41,7 @@ class Updater
         $downloadLink = $data['detail']['full'];
         $fileName = $data['version'] . '.tar.gz';
         $storePath = $this->fullPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'full';
-        $this->download($downloadLink, $fileName, $storePath);
+        Downloader::download($downloadLink, $fileName, $storePath);
         return $storePath . DIRECTORY_SEPARATOR . $fileName;
     }
     
@@ -53,23 +53,5 @@ class Updater
     public function downloadCurrent()
     {
         return $this->downloadFull($this->current);
-    }
-
-    public function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
-    {
-        if (!is_dir($storePath)) {
-            mkdir($storePath, 0777, true);
-        }
-
-        $filePath = $storePath . '/' . $fileName;
-        if (file_exists($filePath)) {
-            throw new Exception("이미 파일이 존재합니다.");
-        }
-
-        $curl = new Curl;
-        $data = $curl->get($downloadLink);
-        if (!file_put_contents($storePath . '/' . $fileName, $data)) {
-            throw new Exception("{$filePath}에 저장을 실패했습니다");
-        }
     }
 }
