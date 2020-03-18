@@ -27,32 +27,38 @@ class Updater
         $this->backupPath = $this->basePath . (isset($pathOption['backup']) ? $pathOption['backup'] : 'backup');
     }
 
-    protected function downloadPatch(array $data)
+    /**
+     * @param string $type = 'full'|'patch'
+     * @param array $data = ['detail' => ['full' => href, 'patch' => href]]
+     * 
+     * @return string $storeFilePath
+     */
+    protected function downloadCode(string $type, array $data)
     {
-        $downloadLink = $data['detail']['patch'];
-        $fileName = $data['version'] . '.patch.tar.gz';
-        $storePath = $this->patchPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'patch';
-        $this->download($downloadLink, $fileName, $storePath);
-        return $storePath . DIRECTORY_SEPARATOR . $fileName;
+        if (in_array($type, ['full', 'patch'])) {
+            $downloadLink = $data['detail'][$type];
+
+            $fileName = $data['version'] . ($type === 'full' ?: '.patch') . '.tar.gz';
+
+            $path = $type . 'path';
+            $storePath = $this->$path . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . $type;
+
+            $this->download($downloadLink, $fileName, $storePath);
+
+            return $storePath . DIRECTORY_SEPARATOR . $fileName;
+        } else {
+            throw new Exception("잘못된 타입을 요청 하였습니다\n허용된 타입: full, patch\n요청된 타입:{$type}\n");
+        }
     }
 
-    protected function downloadFull(array $data)
-    {
-        $downloadLink = $data['detail']['full'];
-        $fileName = $data['version'] . '.tar.gz';
-        $storePath = $this->fullPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'full';
-        $this->download($downloadLink, $fileName, $storePath);
-        return $storePath . DIRECTORY_SEPARATOR . $fileName;
-    }
-    
     public function downloadNext()
     {
-        return $this->downloadPatch($this->next);
+        return $this->downloadCode('patch', $this->next);
     }
 
     public function downloadCurrent()
     {
-        return $this->downloadFull($this->current);
+        return $this->downloadCode('full', $this->current);
     }
 
     public function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
