@@ -99,4 +99,17 @@ class Updater
 
         echo "업데이트에 필요한 파일이 모두 다운로드 되었습니다.\n";
     }
+    
+    /**
+     * Todo
+     * diff public path files
+     * backup diff files
+     * install update with force option
+     * clear update files
+     * clear backup files
+     * rollback from backup files
+     * show diff files
+     * show diff lines
+     * 
+     */
 }
