@@ -1,5 +1,5 @@
 {
-    "name": "Silnex/GnuboardUpdater",
+    "name": "silnex/GnuboardUpdater",
     "authors": [
         {
             "name": "silnex",
@@ -11,7 +11,7 @@
     },
     "autoload": {
         "psr-4" : {
-            "Silnex\\GnuboardUpdater\\" : "src"
+            "silnex\\GnuboardUpdater\\" : "src"
          }
     },
     "autoload-dev": {

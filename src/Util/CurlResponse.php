@@ -1,6 +1,6 @@
 <?php
 
-namespace Silnex\Util;
+namespace silnex\Util;
 
 /**
  * Parses the response from a Curl request into an object containing

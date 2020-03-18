@@ -1,6 +1,6 @@
 <?php
 
-namespace Silnex\Util;
+namespace silnex\Util;
 
 /**
  * A basic CURL wrapper

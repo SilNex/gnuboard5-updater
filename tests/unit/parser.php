@@ -1,3 +1,8 @@
 <?php
 
-require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'boostrap.php';
+require_once __DIR__ . '/../bootstrap.php';
+
+use silnex\GnuboardUpdater\SIRParser;
+
+$parser = new SIRParser;
+var_dump($parser->getPostList());

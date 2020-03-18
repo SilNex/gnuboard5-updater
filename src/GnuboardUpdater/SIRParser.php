@@ -1,8 +1,8 @@
 <?php
 
-namespace Silnex\GnuboardUpdater;
+namespace silnex\GnuboardUpdater;
 
-use Silnex\Util\Curl;
+use silnex\Util\Curl;
 
 class SIRParser
 {
