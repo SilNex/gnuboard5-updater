@@ -16,15 +16,12 @@ class VersionManager implements VersionManagerInterface
 {
     protected $versionList = [];
     protected $paser;
-    protected $basePath, $publicPath, $backupPath, $patchPath, $fullPath;
+    protected $basePath, $publicPath;
 
     public function __construct(string $publicPath, string $type = 'Gnuboard')
     {
         $this->publicPath = $publicPath . DIRECTORY_SEPARATOR;
         $this->basePath = $publicPath . '..' . DIRECTORY_SEPARATOR;
-        $this->backupPath = $this->basePath . 'backup' . DIRECTORY_SEPARATOR;
-        $this->patchPath = $this->basePath . 'patch' . DIRECTORY_SEPARATOR;
-        $this->fullPath = $this->basePath . 'full' . DIRECTORY_SEPARATOR;
 
         if (!is_dir($publicPath)) {
             throw new Exception("경로가 잘못되었습니다.");
