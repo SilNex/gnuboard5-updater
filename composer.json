@@ -1,0 +1,22 @@
+{
+    "name": "SilNex/GnuboardUpdater",
+    "authors": [
+        {
+            "name": "silnex",
+            "email": "silnex@silnex.kr"
+        }
+    ],
+    "require": {
+        "php": ">5.6"
+    },
+    "autoload": {
+        "psr-4" : {
+            "SilNex\\GnuboardUpdater\\" : "src"
+         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MyProject\\Test\\": "tests"
+        }
+    }
+}

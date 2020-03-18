@@ -3,3 +3,5 @@ patch/
 origin/
 backup/
 html/
+legacy/
+/vendor/
