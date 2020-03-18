@@ -8,20 +8,51 @@ use silnex\Util\Curl;
 class Updater
 {
     protected $versionManager;
-    protected $publicPath, $basePath, $backupPath, $patchPath, $fullPath;
+    protected $publicPath, $basePath, $backupPath;
+    protected $current, $next, $previous;
 
     public function __construct(VersionManager $versionManager, array $pathOption = [])
     {
         $this->versionManager = $versionManager;
+        $this->publicPath = $versionManager->getPublicPath();
+        $this->current = $this->versionManager->current();
+        $this->next = $this->versionManager->next();
+        // $this->previous = $this->versionManager->previous();
         $this->setPathInfo($pathOption);
     }
 
-    public function setPathInfo(array $pathOption = [])
+    protected function setPathInfo(array $pathOption = [])
     {
-        $base = $this->basePath;
-        $this->backupPath = $base . (isset($pathOption['backup']) ? $pathOption['backup'] : 'backup');
-        $this->patchPath = $base . (isset($pathOption['patch']) ? $pathOption['patch'] : 'patch');
-        $this->fullPath = $base . (isset($pathOption['full']) ? $pathOption['full'] : 'full');
+        $this->basePath = (isset($pathOption['base']) ? $pathOption['base'] : ($this->publicPath . '..' . DIRECTORY_SEPARATOR));
+        $this->backupPath = $this->basePath . (isset($pathOption['backup']) ? $pathOption['backup'] : 'backup');
+    }
+
+    protected function downloadPatch(array $data)
+    {
+        $downloadLink = $data['detail']['patch'];
+        $fileName = $data['version'] . '.patch.tar.gz';
+        $storePath = $this->patchPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'patch';
+        $this->download($downloadLink, $fileName, $storePath);
+        return $storePath . DIRECTORY_SEPARATOR . $fileName;
+    }
+
+    protected function downloadFull(array $data)
+    {
+        $downloadLink = $data['detail']['full'];
+        $fileName = $data['version'] . '.tar.gz';
+        $storePath = $this->fullPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'full';
+        $this->download($downloadLink, $fileName, $storePath);
+        return $storePath . DIRECTORY_SEPARATOR . $fileName;
+    }
+    
+    public function downloadNext()
+    {
+        return $this->downloadPatch($this->next);
+    }
+
+    public function downloadCurrent()
+    {
+        return $this->downloadFull($this->current);
     }
 
     public function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
@@ -37,6 +68,8 @@ class Updater
 
         $curl = new Curl;
         $data = $curl->get($downloadLink);
-        file_put_contents($storePath . '/' . $fileName, $data);
+        if (!file_put_contents($storePath . '/' . $fileName, $data)) {
+            throw new Exception("{$filePath}에 저장을 실패했습니다");
+        }
     }
 }
