@@ -32,7 +32,7 @@ php updater.php update
 - [x] [같을 경우] 덮어 씌우기
 - [x] [다를 경우] 다른 파일 목록 가져오기
 - [x] 백업 파일에서 복구
-- [x] Updater class 리펙토링
+- [x] SIRUpdater class 리펙토링
 - [x] updater cli 만들기
 - [ ] 그누보드 관리자 UI만들기
 - ETC . . .

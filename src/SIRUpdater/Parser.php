@@ -1,23 +1,26 @@
 <?php
 
-namespace silnex\GnuboardUpdater;
+namespace silnex\SIRUpdater;
 
 use IntlException;
 use InvalidArgumentException;
 use silnex\Util\Curl;
 
-class SIRParser
+class Parser
 {
-    protected $sirBoardPattern = '/<a\shref=\"(.*)\"\sclass="title_link">\s+\[?(보안패치|정식버전|베타버전)?\]?\s?그누보드\s?(5\.4\.[0-9]\.?[0-9]?)/';
-    protected $sirAttachPattern = '/onclick=\"file_download\(\'(\/\/sir\.kr\/bbs\/download\.php.*)\',\s\'gnuboard5\.4\.[0-9]\.?[0-9]?(\.patch)?\.tar\.gz\'\);\"/';
+    protected $postListPattern;
+    protected $postAttatchPattern;
     protected $githubUriPattern = '/>(https:\/\/github\.com\/gnuboard\/gnuboard5\/commit\/[a-z0-9]+)</';
 
     protected $postList = [];
     protected $postAttach = [];
 
-    public function __construct()
+    public function __construct(ParserFactoryInterface $parser)
     {
-        $this->url = "https://sir.kr/g5_pds";
+        $this->url = $parser->getUrl();
+        $this->postListPattern = $parser->getPostListPattern();
+        $this->postAttatchPattern = $parser->getPostAttatchPattern();
+
         $this->curl = new Curl();
         $this->postList = $this->parsePostList();
         ksort($this->postList);
@@ -45,7 +48,7 @@ class SIRParser
 
     protected function parsePostList()
     {
-        $posts = $this->matches($this->sirBoardPattern, $this->url);
+        $posts = $this->matches($this->postListPattern, $this->url);
         for ($i = 0; $i < count($posts[0]); $i++) {
             try {
                 $version = $this->versionFormat($posts[3][$i]);
@@ -67,7 +70,7 @@ class SIRParser
         return $this->curl->get($url);
     }
 
-    public function getPostAttachFiles(string $version)
+    public function parsePostAttachFiles(string $version)
     {
         if ($version < '5.4.0.0') {
             throw new InvalidArgumentException("그누보드 버전 5.4 이상만 지원합니다.");
@@ -75,7 +78,7 @@ class SIRParser
             throw new InvalidArgumentException("버전은 5.4.x.x 와 같은 양식으로 입력해야합니다.");
         }
 
-        $attachFiles = $this->matches($this->sirAttachPattern, $this->postList[$version]['href']);
+        $attachFiles = $this->matches($this->postAttatchPattern, $this->postList[$version]['href']);
 
         for ($i = 0; $i < 2; $i++) {
             $downloadLink = 'https:' . str_replace('download', 'download2', html_entity_decode($attachFiles[1][$i]));
