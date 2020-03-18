@@ -37,10 +37,10 @@ class Parser
         }
     }
 
-    protected function matches(string $pattern, ?string $url, string $response = null)
+    protected function matches(string $pattern, ?string $url, array $param = [], string &$response = null)
     {
         if (isset($url) && is_null($response)) {
-            $response = $this->get($url);
+            $response = $this->get($url, $param);
         }
         preg_match_all($pattern, $response, $mataches);
         return $mataches;
@@ -48,28 +48,30 @@ class Parser
 
     protected function parsePostList()
     {
-        $posts = $this->matches($this->postListPattern, $this->url);
+        $page = 1;
+        do {
+            $posts = $this->matches($this->postListPattern, $this->url, ['page' => $page]);
+            for ($i = 0; $i < count($posts[0]); $i++) {
+                try {
+                    $version = $this->versionFormat($posts[3][$i]);
+                } catch (InvalidArgumentException $e) {
+                    die($e->getMessage());
+                }
 
-        for ($i = 0; $i < count($posts[0]); $i++) {
-            try {
-                $version = $this->versionFormat($posts[3][$i]);
-            } catch (InvalidArgumentException $e) {
-                die($e->getMessage());
+                $this->postList[$version] = [
+                    'href' => "https:" . $posts[1][$i],
+                    'type' => $posts[2][$i],
+                    'version' => $version,
+                ];
             }
-
-            $this->postList[$version] = [
-                'href' => "https:" . $posts[1][$i],
-                'type' => $posts[2][$i],
-                'version' => $version,
-            ];
-        }
+        } while ($version < '5.4.0.0');
 
         return $this->postList;
     }
 
-    protected function get(string $url)
+    protected function get(string $url, array $param = [])
     {
-        return $this->curl->get($url);
+        return $this->curl->get($url, $param);
     }
 
     public function parsePostAttachFiles(string $version)
