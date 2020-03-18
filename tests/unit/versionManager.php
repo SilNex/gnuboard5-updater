@@ -2,7 +2,6 @@
 
 use silnex\SIRUpdater\VersionManager;
 
-
 try {
     $vm = new VersionManager(__DIR__ . '/../../html/');
     echo $vm->current();
