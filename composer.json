@@ -10,9 +10,10 @@
         "php": ">5.6"
     },
     "autoload": {
-        "psr-4" : {
-            "silnex\\GnuboardUpdater\\" : "src"
-         }
+        "psr-4": {
+            "silnex\\GnuboardUpdater\\": "src/GnuboardUpdater",
+            "silnex\\Util\\": "src/Util"
+        }
     },
     "autoload-dev": {
         "psr-4": {
