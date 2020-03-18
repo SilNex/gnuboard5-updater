@@ -24,19 +24,19 @@ class Updater
         $this->fullPath = $base . (isset($pathOption['full']) ? $pathOption['full'] : 'full');
     }
 
-    public function download(string $downloadLink, string $storePath)
+    public function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
     {
-        $pathInfo = pathinfo($storePath);
-        
-        $dirName = $pathInfo['dirname'];
-        $fileName = $pathInfo['basename'];
-
-        if (!is_dir($dirName)) {
-            mkdir($dirName, 0777, true);
+        if (!is_dir($storePath)) {
+            mkdir($storePath, 0777, true);
         }
 
-        if (file_exists($storePath)) {
+        $filePath = $storePath . '/' . $fileName;
+        if (file_exists($filePath)) {
             throw new Exception("이미 파일이 존재합니다.");
         }
+
+        $curl = new Curl;
+        $data = $curl->get($downloadLink);
+        file_put_contents($storePath . '/' . $fileName, $data);
     }
 }
