@@ -3,7 +3,9 @@
 namespace silnex\SIRUpdater;
 
 use Exception;
+use PharData;
 use silnex\Util\Downloader;
+use silnex\Util\Helper;
 
 class Updater
 {
@@ -36,12 +38,12 @@ class Updater
     protected function downloadCode(string $type, array $data)
     {
         if (in_array($type, ['full', 'patch'])) {
+            echo "{$data['version']}을 다운로드 하는중...\n";
             $downloadLink = $data['detail'][$type];
 
             $fileName = $data['version'] . ($type === 'full' ?: '.patch') . '.tar.gz';
 
-            $path = $type . 'path';
-            $storePath = $this->$path . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . $type;
+            $storePath = $this->basePath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . $type;
 
             $this->download($downloadLink, $fileName, $storePath);
 
@@ -51,18 +53,50 @@ class Updater
         }
     }
 
-    public function downloadNext()
+    protected function downloadNext()
     {
         return $this->downloadCode('patch', $this->next);
     }
 
-    public function downloadCurrent()
+    protected function downloadCurrent()
     {
         return $this->downloadCode('full', $this->current);
     }
 
-    public function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
+    protected function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
     {
         Downloader::download($downloadLink, $fileName, $storePath);
+    }
+
+    protected function extract(string $tarFile, bool $remove = false)
+    {
+        echo "압축 해제하는 중...\n";
+        $tarPath = pathinfo($tarFile)['dirname'];
+        $tar = new PharData($tarFile);
+        $tar->extractTo($tarPath);
+        if ($remove) {
+            echo "압축파일 삭제 중...\n";
+            unlink($tarFile);
+        }
+        return $tarPath;
+    }
+
+    public function readyForUpdate($withSkin = false, $withTheme = false)
+    {
+        $nextVersionPath = $this->extract($this->downloadNext(), true);
+        $currentVersionPath = $this->extract($this->downloadCurrent(), true);
+        
+        if (!$withSkin) {
+            echo "스킨 폴더 삭제\n";
+            Helper::rmrf($currentVersionPath . '/skin');
+            Helper::rmrf($currentVersionPath . '/mobile/skin');
+        }
+        
+        if (!$withTheme) {
+            echo "테마 폴더 삭제\n";
+            Helper::rmrf($currentVersionPath . '/theme');
+        }
+
+        echo "업데이트에 필요한 파일이 모두 다운로드 되었습니다.\n";
     }
 }
