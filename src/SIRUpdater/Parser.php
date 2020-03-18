@@ -49,6 +49,7 @@ class Parser
     protected function parsePostList()
     {
         $posts = $this->matches($this->postListPattern, $this->url);
+
         for ($i = 0; $i < count($posts[0]); $i++) {
             try {
                 $version = $this->versionFormat($posts[3][$i]);
@@ -62,6 +63,7 @@ class Parser
                 'version' => $version,
             ];
         }
+
         return $this->postList;
     }
 
