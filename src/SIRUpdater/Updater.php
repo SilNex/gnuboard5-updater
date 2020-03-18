@@ -32,7 +32,7 @@ class Updater
         $downloadLink = $data['detail']['patch'];
         $fileName = $data['version'] . '.patch.tar.gz';
         $storePath = $this->patchPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'patch';
-        Downloader::download($downloadLink, $fileName, $storePath);
+        $this->download($downloadLink, $fileName, $storePath);
         return $storePath . DIRECTORY_SEPARATOR . $fileName;
     }
 
@@ -41,7 +41,7 @@ class Updater
         $downloadLink = $data['detail']['full'];
         $fileName = $data['version'] . '.tar.gz';
         $storePath = $this->fullPath . str_replace('.', '_', $data['version']) . DIRECTORY_SEPARATOR . 'full';
-        Downloader::download($downloadLink, $fileName, $storePath);
+        $this->download($downloadLink, $fileName, $storePath);
         return $storePath . DIRECTORY_SEPARATOR . $fileName;
     }
     
@@ -53,5 +53,10 @@ class Updater
     public function downloadCurrent()
     {
         return $this->downloadFull($this->current);
+    }
+
+    public function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
+    {
+        Downloader::download($downloadLink, $fileName, $storePath);
     }
 }
