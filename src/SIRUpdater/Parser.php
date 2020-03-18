@@ -37,7 +37,7 @@ class Parser
         }
     }
 
-    protected function matches(string $pattern, ?string $url, array $param = [], string &$response = null)
+    protected function matches(string $pattern, string $url, array $param = [], string &$response = null)
     {
         if (isset($url) && is_null($response)) {
             $response = $this->get($url, $param);
