@@ -73,7 +73,7 @@ class VersionManager implements VersionManagerInterface
         $versionList = $this->versionList;
         krsort($versionList);
         foreach ($versionList as $version => $data) {
-            if ($version > $this->current) {
+            if ($version < $this->current) {
                 return $version;
             }
         }
@@ -91,6 +91,6 @@ class VersionManager implements VersionManagerInterface
 
     public function previous()
     {
-        
+        return $this->previous;
     }
 }
