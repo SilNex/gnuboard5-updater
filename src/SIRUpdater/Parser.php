@@ -94,10 +94,8 @@ class Parser
         }
 
         return [
-            $version => [
-                'patch' => $patchLink,
-                'full' => $fullLink,
-            ],
+            'patch' => $patchLink,
+            'full' => $fullLink,
         ];
     }
 
