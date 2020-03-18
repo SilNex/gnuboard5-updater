@@ -16,13 +16,12 @@ class VersionManager implements VersionManagerInterface
 {
     protected $versionList = [];
     protected $paser;
-    protected $basePath, $publicPath;
+    protected $publicPath;
     protected $current;
 
     public function __construct(string $publicPath, Parser $parser)
     {
         $this->publicPath = $publicPath . DIRECTORY_SEPARATOR;
-        $this->basePath = $publicPath . '..' . DIRECTORY_SEPARATOR;
 
         if (!is_dir($this->publicPath)) {
             throw new Exception("{$this->publicPath}\n경로가 잘못되었습니다.\n");
@@ -31,11 +30,8 @@ class VersionManager implements VersionManagerInterface
         }
 
         $this->current = $this->getCurrentVersion();
-
         $this->parser = $parser;
-
         $this->versionList = $this->parser->getPostList();
-
         $this->next = $this->getNextVersion();
         $this->previous = $this->getpreviousVersion();
     }
@@ -75,16 +71,21 @@ class VersionManager implements VersionManagerInterface
 
     public function current()
     {
-        return $this->current;
+        return $this->versionList[$this->current];
     }
 
     public function next()
     {
-        return $this->next;
+        return $this->versionList[$this->next];
     }
 
     public function previous()
     {
-        return $this->previous;
+        return $this->versionList[$this->previous];
+    }
+
+    public function getPublicPath()
+    {
+        return $this->publicPath;
     }
 }
