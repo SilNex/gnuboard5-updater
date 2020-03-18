@@ -19,7 +19,7 @@ class VersionManager implements VersionManagerInterface
     protected $basePath, $publicPath;
     protected $current;
 
-    public function __construct(string $publicPath, string $type = 'Gnuboard')
+    public function __construct(string $publicPath, Parser $parser)
     {
         $this->publicPath = $publicPath . DIRECTORY_SEPARATOR;
         $this->basePath = $publicPath . '..' . DIRECTORY_SEPARATOR;
@@ -32,14 +32,8 @@ class VersionManager implements VersionManagerInterface
 
         $this->current = $this->getCurrentVersion();
 
-        if ($type === 'Gnuboard') {
-            $this->parser = new Parser(new GnuboardParserFactory());
-        } elseif ($type === 'YoungCart') {
-            // $this->parser = new YoungCartParserFactory();
-            throw new Exception("영카트는 현재 지원되지 않습니다.\n");
-        } else {
-            throw new InvalidArgumentException("type은 [Gnuboard, YoungCart]만 허용 됩니다.\n");
-        }
+        $this->parser = $parser;
+
         $this->versionList = $this->parser->getPostList();
 
         $this->next = $this->getNextVersion();

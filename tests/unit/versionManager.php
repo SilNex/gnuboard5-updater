@@ -1,9 +1,12 @@
 <?php
 
+use silnex\SIRUpdater\GnuboardParserFactory;
+use silnex\SIRUpdater\Parser;
 use silnex\SIRUpdater\VersionManager;
 
 try {
-    $vm = new VersionManager(__DIR__ . '/../../html/');
+    $parser = new Parser(new GnuboardParserFactory());
+    $vm = new VersionManager(__DIR__ . '/../../html/', $parser);
     echo $vm->current();
     echo $vm->next();
     echo $vm->previous();
