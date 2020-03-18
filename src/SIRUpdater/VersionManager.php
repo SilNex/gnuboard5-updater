@@ -16,7 +16,7 @@ class VersionManager implements VersionManagerInterface
 {
     protected $versionList = [];
     protected $paser;
-    protected $publicPath;
+    protected $parser;
     protected $current;
 
     public function __construct(string $publicPath, Parser $parser)
@@ -69,19 +69,27 @@ class VersionManager implements VersionManagerInterface
         }
     }
 
+    protected function mergeDetail(string $version)
+    {
+        $versionInfo = $this->versionList[$version];
+        $versionInfo['detail'] = $this->parser->parsePostAttachFiles($version);
+
+        return $versionInfo;
+    }
+
     public function current()
     {
-        return $this->versionList[$this->current];
+        return $this->mergeDetail($this->current);
     }
 
     public function next()
     {
-        return $this->versionList[$this->next];
+        return $this->mergeDetail($this->next);
     }
 
     public function previous()
     {
-        return $this->versionList[$this->previous];
+        return $this->mergeDetail($this->previous);
     }
 
     public function getPublicPath()
