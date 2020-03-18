@@ -24,16 +24,16 @@ class VersionManager implements VersionManagerInterface
         $this->publicPath = $publicPath . DIRECTORY_SEPARATOR;
         $this->basePath = $publicPath . '..' . DIRECTORY_SEPARATOR;
 
-        if (!is_dir($publicPath)) {
-            throw new Exception("경로가 잘못되었습니다.\n");
-        } elseif (file_exists($this->publicPath . 'config.php')) {
-            throw new Exception("config.php 파일을 찾을 수 없습니다.\n");
+        if (!is_dir($this->publicPath)) {
+            throw new Exception("{$this->publicPath}\n경로가 잘못되었습니다.\n");
+        } elseif (!file_exists($this->publicPath . 'config.php')) {
+            throw new Exception("{$this->publicPath}\nconfig.php 파일을 찾을 수 없습니다.\n");
         }
 
         $this->current = $this->getCurrentVersion();
 
         if ($type === 'Gnuboard') {
-            $this->parser = new GnuboardParserFactory();
+            $this->parser = new Parser(new GnuboardParserFactory());
         } elseif ($type === 'YoungCart') {
             // $this->parser = new YoungCartParserFactory();
             throw new Exception("영카트는 현재 지원되지 않습니다.\n");
@@ -41,6 +41,9 @@ class VersionManager implements VersionManagerInterface
             throw new InvalidArgumentException("type은 [Gnuboard, YoungCart]만 허용 됩니다.\n");
         }
         $this->versionList = $this->parser->getPostList();
+
+        $this->next = $this->getNextVersion();
+        $this->previous = $this->getpreviousVersion();
     }
 
     protected function getCurrentVersion()
@@ -54,6 +57,28 @@ class VersionManager implements VersionManagerInterface
         }
     }
 
+    protected function getNextVersion()
+    {
+        $versionList = $this->versionList;
+        ksort($versionList);
+        foreach ($versionList as $version => $data) {
+            if ($version > $this->current) {
+                return $version;
+            }
+        }
+    }
+    
+    protected function getpreviousVersion()
+    {
+        $versionList = $this->versionList;
+        krsort($versionList);
+        foreach ($versionList as $version => $data) {
+            if ($version > $this->current) {
+                return $version;
+            }
+        }
+    }
+
     public function current()
     {
         return $this->current;
@@ -61,7 +86,7 @@ class VersionManager implements VersionManagerInterface
 
     public function next()
     {
-        
+        return $this->next;
     }
 
     public function previous()
