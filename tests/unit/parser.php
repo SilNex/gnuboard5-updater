@@ -1,6 +1,8 @@
 <?php
 
-use silnex\SIRUpdater\SIRParser;
+use silnex\SIRUpdater\GnuboardParserFactory;
+use silnex\SIRUpdater\Parser;
 
-$parser = new SIRParser;
-// var_dump($parser->getPostAttachFiles('5.4.1.0'));
+$parserFactory = new GnuboardParserFactory(); 
+$parser = new Parser($parserFactory);
+var_dump($parser->parsePostAttachFiles('5.4.1.0'));
