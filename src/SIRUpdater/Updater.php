@@ -213,6 +213,9 @@ class Updater
 
     public function backup()
     {
+        if (is_dir($this->backupPath)) {
+            echo "이미 백업 폴더가 있습니다.\n백업 폴더를 삭제후 진행해주세요\n";
+        }
         $patchFiles = $this->getPatchFiles();
         $publicPath = $this->getPublicPath();
 
