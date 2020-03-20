@@ -189,17 +189,28 @@ class Updater
         return $diffFiles;
     }
 
+    protected function cover(array $filesPath, string $sourceBasePath, string $targetBasePath)
+    {
+        foreach ($filesPath as $patchFile) {
+            $sourceFile = $sourceBasePath . $patchFile;
+            $targetFile = $targetBasePath . $patchFile;
+            echo "cover $targetFile > $sourceFile\n";
+            // copy($sourceFile, $targetFile);
+        }
+    }
+
     protected function upgrade()
     {
         $patchFiles = $this->getPatchFiles();
         $nextPath = $this->getNextPath('patch');
         $publicPath = $this->getPublicPath();
 
-        foreach ($patchFiles as $patchFile) {
-            $nextFile = $nextPath . $patchFile;
-            $publicFile = $publicPath . $patchFile;
-            copy($nextFile, $publicFile);
-        }
+        $this->cover($patchFiles, $nextPath, $publicPath);
+    }
+
+    public function backup()
+    {
+
     }
 
     public function update()
