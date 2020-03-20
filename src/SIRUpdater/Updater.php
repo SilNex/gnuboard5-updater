@@ -189,13 +189,16 @@ class Updater
         return $diffFiles;
     }
 
-    protected function cover(array $filesPath, string $sourceBasePath, string $targetBasePath)
+    protected function cover(array $filesPath, string $sourceBasePath, string $destBasePath)
     {
         foreach ($filesPath as $patchFile) {
             $sourceFile = $sourceBasePath . $patchFile;
-            $targetFile = $targetBasePath . $patchFile;
-            echo "cover $targetFile > $sourceFile\n";
-            // copy($sourceFile, $targetFile);
+            $destFile = $destBasePath . $patchFile;
+            $path = pathinfo($destFile);
+            if (!file_exists($path['dirname'])) {
+                mkdir($path['dirname'], 0777, true);
+            }
+            copy($sourceFile, $destFile);
         }
     }
 
@@ -210,13 +213,29 @@ class Updater
 
     public function backup()
     {
+        $patchFiles = $this->getPatchFiles();
+        $publicPath = $this->getPublicPath();
 
+        $this->cover($patchFiles, $publicPath, $this->backupPath);
+    }
+
+    public function restore()
+    {
+        if (!is_dir($this->backupPath)) {
+            echo "백업파일이 없습니다.\n";
+            exit;
+        }
+        $patchFiles = $this->getPatchFiles();
+        $publicPath = $this->getPublicPath();
+
+        $this->cover($patchFiles, $this->backupPath, $publicPath);
     }
 
     public function update()
     {
         $diff = $this->diffCheck();
         if (empty($diff)) {
+            $this->backup();
             $this->upgrade();
         } else {
             // diff line show process
