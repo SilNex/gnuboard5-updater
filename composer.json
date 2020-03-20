@@ -14,10 +14,5 @@
             "silnex\\SIRUpdater\\": "src/SIRUpdater",
             "silnex\\Util\\": "src/Util"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "MyProject\\Test\\": "tests"
-        }
     }
 }
