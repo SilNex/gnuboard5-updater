@@ -182,7 +182,7 @@ class Updater
             $publicFile = $publicPath . $patchFile;
 
             if (Diff::isDiff($originFile, $publicFile)) {
-                $diffFiles[] = $publicFile;
+                $diffFiles[$originFile] = $publicFile;
             }
         }
 
@@ -234,16 +234,20 @@ class Updater
         $this->cover($patchFiles, $this->backupPath, $publicPath);
     }
 
-    public function update()
+    public function update($withClear = false)
     {
         $diff = $this->diffCheck();
         if (empty($diff)) {
-            $this->backup();
-            $this->upgrade();
+            // $this->backup();
+            // $this->upgrade();
         } else {
-            // diff line show process
+            foreach ($diff as $file1 => $file2) {
+                Diff::displayDiff($file1, $file2);
+            }
         }
 
-        // $this->clear();
+        if ($withClear) {
+            $this->clear();
+        }
     }
 }
