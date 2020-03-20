@@ -4,6 +4,7 @@ namespace silnex\SIRUpdater;
 
 use Exception;
 use PharData;
+use silnex\Util\Diff;
 use silnex\Util\Downloader;
 use silnex\Util\Helper;
 
@@ -12,31 +13,28 @@ class Updater
     protected $versionManager;
     protected $publicPath, $basePath, $backupPath;
     protected $current, $next, $previous;
+    protected $withSkin = false, $withTheme = false;
 
-    public function __construct(VersionManager $versionManager, $baseDir = null, $backupDir = null)
+    public function __construct(VersionManager $versionManager)
     {
         $this->versionManager = $versionManager;
         $this->publicPath = $versionManager->getPublicPath();
         $this->current = $this->versionManager->current();
         $this->next = $this->versionManager->next();
         // $this->previous = $this->versionManager->previous();
-
-        $pathOption = [];
-        if ($baseDir) {
-            $pathOption['base'] = $baseDir;
-        }
-
-        if ($backupDir) {
-            $pathOption['backup'] = $baseDir;
-        }
-
-        $this->setPathInfo($pathOption);
+        $this->setOption();
     }
 
-    protected function setPathInfo(array $pathOption = [])
+    public function setOption(array $options = [])
     {
-        $this->basePath = (isset($pathOption['base']) ? $pathOption['base'] : ($this->publicPath . '..' . DIRECTORY_SEPARATOR));
-        $this->backupPath = $this->basePath . (isset($pathOption['backup']) ? $pathOption['backup'] : 'backup');
+        $this->basePath = isset($options['path']['base']) ? $options['path']['base'] : ($this->publicPath . '../');
+        $this->backupPath = $this->basePath . (isset($options['path']['backup']) ? $options['path']['backup'] : 'backup');
+        $this->withSkin = isset($options['withSkin']) ?: false;
+        $this->withTheme = isset($options['withTheme']) ?: false;
+    }
+
+    public function setPathInfo()
+    {
     }
 
     /**
@@ -53,24 +51,24 @@ class Updater
 
             $fileName = $version['version'] . ($type === 'full' ?: '.patch') . '.tar.gz';
 
-            $storePath = $this->basePath . str_replace('.', '_', $version['version']) . DIRECTORY_SEPARATOR . $type;
+            $storePath = $this->basePath . str_replace('.', '_', $version['version']) . '/' . $type;
 
             $this->download($downloadLink, $fileName, $storePath);
 
-            return $storePath . DIRECTORY_SEPARATOR . $fileName;
+            return $storePath . '/' . $fileName;
         } else {
             throw new Exception("잘못된 타입을 요청 하였습니다\n허용된 타입: full, patch\n요청된 타입:{$type}\n");
         }
     }
 
-    protected function downloadNext()
+    protected function downloadNext(string $type = 'patch')
     {
-        return $this->downloadCode('patch', $this->next);
+        return $this->downloadCode($type, $this->next);
     }
 
-    protected function downloadCurrent()
+    protected function downloadCurrent(string $type = 'full')
     {
-        return $this->downloadCode('full', $this->current);
+        return $this->downloadCode($type, $this->current);
     }
 
     protected function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
@@ -105,11 +103,15 @@ class Updater
         return $this->getPath($this->previous, $postFix);
     }
 
+    protected function getPublicPath($postFix = false)
+    {
+        $postFix = Helper::startSeparator($postFix);
+        return rtrim($this->publicPath, '/') . $postFix;
+    }
+
     protected function getPath(array $version, $postFix = false)
     {
-        if ($postFix && substr($postFix, 0, 1) !== '/') {
-            $postFix = '/' . $postFix;
-        }
+        $postFix = Helper::startSeparator($postFix);
         return $this->basePath . str_replace('.', '_', $version['version']) . $postFix;
     }
 
@@ -123,44 +125,91 @@ class Updater
         Helper::rmrf($this->basePath . '/5_4_*');
     }
 
-    protected function readyForUpdate($withSkin = false, $withTheme = false)
+    protected function readyForUpdate()
     {
-        $this->extract($this->downloadNext(), true);
-        $this->extract($this->downloadCurrent(), true);
+        try {
+            if (!is_dir($this->getNextPath('patch'))) {
+                $this->extract($this->downloadNext(), true);
 
-        if (!$withSkin) {
-            echo "스킨 폴더 삭제\n";
-            Helper::rmrf($this->getCurrentPath('full/skin'));
-            Helper::rmrf($this->getCurrentPath('full/mobile/skin'));
+                if (!$this->withSkin) {
+                    echo "스킨 폴더 삭제\n";
+                    Helper::rmrf($this->getNextPath('full/skin'));
+                    Helper::rmrf($this->getNextPath('full/mobile/skin'));
+                }
+
+                if (!$this->withTheme) {
+                    echo "테마 폴더 삭제\n";
+                    Helper::rmrf($this->getNextPath('full/theme'));
+                }
+            } elseif (!is_dir($this->getCurrentPath('full'))) {
+                $this->extract($this->downloadCurrent(), true);
+
+                if (!$this->withSkin) {
+                    echo "스킨 폴더 삭제\n";
+                    Helper::rmrf($this->getCurrentPath('full/skin'));
+                    Helper::rmrf($this->getCurrentPath('full/mobile/skin'));
+                }
+
+                if (!$this->withTheme) {
+                    echo "테마 폴더 삭제\n";
+                    Helper::rmrf($this->getCurrentPath('full/theme'));
+                }
+            }
+            echo "업데이트에 필요한 파일이 모두 다운로드 되었습니다.\n";
+        } catch (Exception $e) {
+            echo $e->getMessage();
         }
-
-        if (!$withTheme) {
-            echo "테마 폴더 삭제\n";
-            Helper::rmrf($this->getCurrentPath('full/theme'));
-        }
-
-        echo "업데이트에 필요한 파일이 모두 다운로드 되었습니다.\n";
     }
 
-    public function update($withDownload = true, $withSkin = false, $withTheme = false)
+    protected function getPatchFiles()
     {
-        if ($withDownload) {
-            try {
-                $this->readyForUpdate($withSkin, $withTheme);
-            } catch (Exception $e) {
-                echo $e->getMessage();
+        $nextPatchPath = $this->getNextPath('patch');
+        return str_replace($nextPatchPath, '', Helper::scanFiles($nextPatchPath));
+    }
+
+    public function diffCheck()
+    {
+        $originalPath = $this->getCurrentPath('full');
+        $publicPath = $this->getPublicPath();
+
+        $this->readyForUpdate();
+
+        $patchFiles = $this->getPatchFiles();
+        $diffFiles = [];
+
+        foreach ($patchFiles as $patchFile) {
+            $originFile = $originalPath . $patchFile;
+            $publicFile = $publicPath . $patchFile;
+
+            if (Diff::isDiff($originFile, $publicFile)) {
+                $diffFiles[] = $publicFile;
             }
         }
 
-        // array_map(
-        //     function ($item) {
-        //         var_dump($item);
-        //     },
-        //     Helper::scanFiles($this->getNextPath('patch'))
-        // );
+        return $diffFiles;
+    }
 
-        // var_dump(Helper::scanFiles($this->getNextPath('patch')));
-        echo $this->getNextPath('patch');
+    protected function upgrade()
+    {
+        $patchFiles = $this->getPatchFiles();
+        $nextPath = $this->getNextPath('patch');
+        $publicPath = $this->getPublicPath();
+
+        foreach ($patchFiles as $patchFile) {
+            $nextFile = $nextPath . $patchFile;
+            $publicFile = $publicPath . $patchFile;
+            copy($nextFile, $publicFile);
+        }
+    }
+
+    public function update()
+    {
+        $diff = $this->diffCheck();
+        if (empty($diff)) {
+            $this->upgrade();
+        } else {
+            // diff line show process
+        }
 
         // $this->clear();
     }
