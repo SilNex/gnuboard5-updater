@@ -108,7 +108,7 @@ class Updater
     protected function getPath(array $version, $postFix = false)
     {
         if ($postFix && substr($postFix, 0, 1) !== '/') {
-            $postFix .= '/' . $postFix;
+            $postFix = '/' . $postFix;
         }
         return $this->basePath . str_replace('.', '_', $version['version']) . $postFix;
     }
@@ -142,20 +142,25 @@ class Updater
         echo "업데이트에 필요한 파일이 모두 다운로드 되었습니다.\n";
     }
 
-    public function update($withSkin = false, $withTheme = false)
+    public function update($withDownload = true, $withSkin = false, $withTheme = false)
     {
-        try {
-            $this->readyForUpdate($withSkin, $withTheme);
-        } catch (Exception $e) {
-            echo $e->getMessage();
+        if ($withDownload) {
+            try {
+                $this->readyForUpdate($withSkin, $withTheme);
+            } catch (Exception $e) {
+                echo $e->getMessage();
+            }
         }
 
-        array_map(
-            function ($key, $item) {
-                var_dump($key, $item);
-            },
-            Helper::scanFiles($this->nextVersionPath)
-        );
+        // array_map(
+        //     function ($item) {
+        //         var_dump($item);
+        //     },
+        //     Helper::scanFiles($this->getNextPath('patch'))
+        // );
+
+        // var_dump(Helper::scanFiles($this->getNextPath('patch')));
+        echo $this->getNextPath('patch');
 
         // $this->clear();
     }
