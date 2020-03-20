@@ -9,9 +9,4 @@ $gnuFactory = new GnuboardParserFactory();
 $parser = new Parser($gnuFactory);
 $vm = new VersionManager(__DIR__ . '/../../html', $parser);
 $updater = new Updater($vm);
-
-try {
-    $updater->readyForUpdate();
-} catch (Exception $e) {
-    echo $e->getMessage();
-}
+($updater->update());
