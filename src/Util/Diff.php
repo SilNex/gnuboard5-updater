@@ -2,6 +2,8 @@
 
 namespace silnex\Util;
 
+use Exception;
+
 /*
 
 class.Diff.php
@@ -24,18 +26,36 @@ class Diff
     const DELETED    = 1;
     const INSERTED   = 2;
 
-    /* Returns the diff for two strings. The return value is an array, each of
-   * whose values is an array containing two values: a line (or character, if
-   * $compareCharacters is true), and one of the constants DIFF::UNMODIFIED (the
-   * line or character is in both strings), DIFF::DELETED (the line or character
-   * is only in the first string), and DIFF::INSERTED (the line or character is
-   * only in the second string). The parameters are:
-   *
-   * $string1           - the first string
-   * $string2           - the second string
-   * $compareCharacters - true to compare characters, and false to compare
-   *                      lines; this optional parameter defaults to false
-   */
+    public static function isDiff($file1, $file2)
+    {
+        $hasFile1 = file_exists($file1);
+        $hasFile2 = file_exists($file2);
+        
+        if (!$hasFile1 && !$hasFile2) {
+            return false;
+        } elseif (!$hasFile1 || !$hasFile2) {
+            return true;
+        }
+
+        if (file_get_contents($file1) === file_get_contents($file2)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /** Returns the diff for two strings. The return value is an array, each of
+     * whose values is an array containing two values: a line (or character, if
+     * $compareCharacters is true), and one of the constants DIFF::UNMODIFIED (the
+     * line or character is in both strings), DIFF::DELETED (the line or character
+     * is only in the first string), and DIFF::INSERTED (the line or character is
+     * only in the second string). The parameters are:
+     *
+     * $string1           - the first string
+     * $string2           - the second string
+     * $compareCharacters - true to compare characters, and false to compare
+     *                      lines; this optional parameter defaults to false
+     */
     public static function compare(
         $string1,
         $string2,
