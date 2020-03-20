@@ -234,13 +234,14 @@ class Updater
         $this->cover($patchFiles, $this->backupPath, $publicPath);
     }
 
-    public function update($withClear = false)
+    public function update($force = false, $withClear = false)
     {
         $diff = $this->diffCheck();
-        if (empty($diff)) {
-            // $this->backup();
-            // $this->upgrade();
+        if ($force || empty($diff)) {
+            $this->backup();
+            $this->upgrade();
         } else {
+            echo "다음 항목에 다른점이 있습니다.\n";
             foreach ($diff as $file1 => $file2) {
                 Diff::displayDiff($file1, $file2);
             }
