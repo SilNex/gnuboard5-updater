@@ -4,7 +4,7 @@ namespace silnex\Util;
 
 class Helper
 {
-    static public function rmrf($path)
+    public static function rmrf($path)
     {
         foreach (glob($path, GLOB_MARK | GLOB_BRACE) as $file) {
             if (is_dir($file)) {
@@ -16,7 +16,7 @@ class Helper
         }
     }
 
-    static public function scanFiles(string $path, &$files = null, int $depth = 1)
+    public static function scanFiles(string $path, &$files = null, int $depth = 1)
     {
         foreach (glob($path) as $file) {
             if (is_dir($file)) {
@@ -28,7 +28,7 @@ class Helper
         return $files;
     }
 
-    static public function startSeparator(string $path)
+    public static function startSeparator(string $path)
     {
         if ($path && substr($path, 0, 1) !== '/') {
             $path = '/' . $path;

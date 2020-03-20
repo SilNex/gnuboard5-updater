@@ -6,7 +6,7 @@ use Exception;
 
 class Downloader
 {
-    static public function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
+    public static function download(string $downloadLink, string $fileName, string $storePath = '/tmp')
     {
         if (!is_dir($storePath)) {
             mkdir($storePath, 0777, true);
