@@ -114,6 +114,11 @@ class Updater
         $postFix = Helper::startSeparator($postFix);
         return $this->basePath . str_replace('.', '_', $version['version']) . $postFix;
     }
+    
+    protected function removeBasePath(string $path)
+    {
+        return str_replace($this->publicPath, '', str_replace($this->basePath, '', $path));
+    }
 
     protected function clear($withBackup = false)
     {
@@ -198,6 +203,7 @@ class Updater
             if (!file_exists($path['dirname'])) {
                 mkdir($path['dirname'], 0777, true);
             }
+            echo $this->removeBasePath($destFile) . " 파일을 " . $this->removeBasePath($sourceFile) . "로 덮어씌웠습니다.\n";
             copy($sourceFile, $destFile);
         }
     }
@@ -228,7 +234,7 @@ class Updater
             echo "백업파일이 없습니다.\n";
             exit;
         }
-        $patchFiles = $this->getPatchFiles();
+        $patchFiles = str_replace($this->backupPath, '', Helper::scanFiles($this->backupPath));
         $publicPath = $this->getPublicPath();
 
         $this->cover($patchFiles, $this->backupPath, $publicPath);
