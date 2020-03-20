@@ -26,11 +26,50 @@ class Diff
     const DELETED    = 1;
     const INSERTED   = 2;
 
+    public static function displayDiff($file1, $file2)
+    {
+        $diffLines = self::getDiffLines($file1, $file2);
+
+        if (empty($diffLines)) {
+            echo "Same file\n";
+        } else {
+            $file1StrLen = strlen($file1);
+            $file2StrLen = strlen($file2);
+
+            printf("%3s %{$file1StrLen}s <> %{$file2StrLen}s\n", 0, $file1, $file2);
+
+            foreach ($diffLines as $index => $lines) {
+                echo str_pad($index, 3, STR_PAD_LEFT);
+                echo str_pad($lines[0], $file1StrLen + 5);
+                echo str_pad($lines[1], $file2StrLen);
+                echo "\n";
+            }
+        }
+    }
+
+    public static function getDiffLines($file1, $file2)
+    {
+        foreach (self::compareFiles($file1, $file2) as $line => $diff) {
+            if ($diff[1] === self::INSERTED) {
+                $prefix = "+";
+                $line -= 1;
+            } elseif ($diff[1] === self::DELETED) {
+                $prefix = "-";
+            }
+            $line += 1;
+            if ($diff[1] !== self::UNMODIFIED) {
+                $diffLins[$line][] = "{$prefix} {$diff[0]}";
+            }
+        };
+
+        return $diffLins;
+    }
+
     public static function isDiff($file1, $file2)
     {
         $hasFile1 = file_exists($file1);
         $hasFile2 = file_exists($file2);
-        
+
         if (!$hasFile1 && !$hasFile2) {
             return false;
         } elseif (!$hasFile1 || !$hasFile2) {
