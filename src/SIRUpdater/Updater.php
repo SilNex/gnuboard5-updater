@@ -100,7 +100,7 @@ class Updater
         return $this->getPath($this->current, $postFix);
     }
 
-    protected function getPrevious($postFix = false)
+    protected function getPreviousPath($postFix = false)
     {
         return $this->getPath($this->previous, $postFix);
     }
