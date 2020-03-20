@@ -10,8 +10,4 @@ $parser = new Parser($gnuFactory);
 $vm = new VersionManager(__DIR__ . '/../../html', $parser);
 $updater = new Updater($vm);
 
-try {
-    $updater->readyForUpdate();
-} catch (Exception $e) {
-    echo $e->getMessage();
-}
+var_dump($updater->getVersionPath('next', 'full'), $updater->getVersionPath('next', 'full'));
