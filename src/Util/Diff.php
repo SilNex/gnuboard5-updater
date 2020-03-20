@@ -30,17 +30,16 @@ class Diff
     {
         $diffLines = self::getDiffLines($file1, $file2);
 
-        if (empty($diffLines)) {
-            echo "Same file\n";
-        } else {
-            $file1StrLen = strlen($file1);
-            $file2StrLen = strlen($file2);
+        if (!empty($diffLines)) {
+            $file1StrLen = mb_strlen($file1);
+            $file2StrLen = mb_strlen($file2);
 
-            printf("%3s %{$file1StrLen}s <> %{$file2StrLen}s\n", 0, $file1, $file2);
+            printf("%5s. %{$file1StrLen}s | %{$file2StrLen}s\n", ' ', $file1, $file2);
 
             foreach ($diffLines as $index => $lines) {
-                echo str_pad($index, 3, STR_PAD_LEFT);
-                echo str_pad($lines[0], $file1StrLen + 5);
+                $beforeIndex = $index;
+                echo str_pad($index, 5, ' ', STR_PAD_LEFT) . '. ';
+                echo str_pad($lines[0], $file1StrLen + 1) . '| ';
                 echo str_pad($lines[1], $file2StrLen);
                 echo "\n";
             }
@@ -51,18 +50,18 @@ class Diff
     {
         foreach (self::compareFiles($file1, $file2) as $line => $diff) {
             if ($diff[1] === self::INSERTED) {
-                $prefix = "+";
+                $prefix = ">";
                 $line -= 1;
             } elseif ($diff[1] === self::DELETED) {
-                $prefix = "-";
+                $prefix = ">";
             }
             $line += 1;
             if ($diff[1] !== self::UNMODIFIED) {
-                $diffLins[$line][] = "{$prefix} {$diff[0]}";
+                $diffLines[$line][] = "{$prefix} {$diff[0]}";
             }
         };
 
-        return $diffLins;
+        return $diffLines;
     }
 
     public static function isDiff($file1, $file2)
