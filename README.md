@@ -22,12 +22,14 @@
 
 ```php
 <?php
-$gnuFactory = new GnuboardSIRParserFactory();
-$parser = new SIRParser($gnuFactory);
-$vm = new VersionManager('/your/public/html/directory', $parser);
-$updater = new Updater($vm);
+require_once 'vendor/autoload.php';
+
+use silnex\SIRUpdater\Updater;
+
+$updater = new Updater('/your/public/html/directory');
 $updater->update(true);
 ```
 
 # Todo
- - [ ] 좀더 init 과정 심플하게 바꾸기
+ - [x] 좀더 init 과정 심플하게 바꾸기
+ - [ ] 옵션 설명 추가하기
