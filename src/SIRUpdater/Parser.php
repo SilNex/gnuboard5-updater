@@ -2,11 +2,10 @@
 
 namespace silnex\SIRUpdater;
 
-use IntlException;
 use InvalidArgumentException;
 use silnex\Util\Curl;
 
-class Parser
+class SIRParser
 {
     protected $postListPattern;
     protected $postAttatchPattern;
@@ -15,7 +14,7 @@ class Parser
     protected $postList = [];
     protected $postAttach = [];
 
-    public function __construct(ParserFactoryInterface $parser)
+    public function __construct(SIRParserFactoryInterface $parser)
     {
         $this->url = $parser->getUrl();
         $this->postListPattern = $parser->getPostListPattern();
