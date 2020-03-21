@@ -2,7 +2,7 @@
 
 namespace silnex\SIRUpdater;
 
-class GnuboardParserFactory implements ParserFactoryInterface
+class GnuboardSIRParserFactory implements SIRParserFactoryInterface
 {
     protected $url;
     protected $postAttatchPattern;

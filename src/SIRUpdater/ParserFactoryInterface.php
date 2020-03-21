@@ -2,7 +2,7 @@
 
 namespace silnex\SIRUpdater;
 
-interface ParserFactoryInterface
+interface SIRParserFactoryInterface
 {
     public function getUrl();
     public function getPostListPattern();

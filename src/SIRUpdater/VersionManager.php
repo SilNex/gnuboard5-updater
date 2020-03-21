@@ -19,7 +19,7 @@ class VersionManager implements VersionManagerInterface
     protected $parser;
     protected $current;
 
-    public function __construct(string $publicPath, Parser $parser)
+    public function __construct(string $publicPath, SIRParser $parser)
     {
         $this->publicPath = $publicPath . DIRECTORY_SEPARATOR;
 

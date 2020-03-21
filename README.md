@@ -22,8 +22,8 @@
 
 ```php
 <?php
-$gnuFactory = new GnuboardParserFactory();
-$parser = new Parser($gnuFactory);
+$gnuFactory = new GnuboardSIRParserFactory();
+$parser = new SIRParser($gnuFactory);
 $vm = new VersionManager('/your/public/html/directory', $parser);
 $updater = new Updater($vm);
 $updater->update(true);
