@@ -127,7 +127,7 @@ class Updater
         }
         Helper::rmrf($this->getNextPath());
         Helper::rmrf($this->getCurrentPath());
-        Helper::rmrf($this->basePath . '/5_4_*');
+        Helper::rmrf($this->basePath . '/5_*');
     }
 
     protected function readyForUpdate()
