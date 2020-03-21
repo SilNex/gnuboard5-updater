@@ -15,10 +15,16 @@ class Updater
     protected $current, $next, $previous;
     protected $withSkin = false, $withTheme = false;
 
-    public function __construct(VersionManager $versionManager)
+    public function __construct(string $publicPath, string $type = 'Gnuboard')
     {
-        $this->versionManager = $versionManager;
-        $this->publicPath = $versionManager->getPublicPath();
+        $this->publicPath = $publicPath;
+        if ($type === 'Gnuboard') {
+            $factory = new GnuboardSIRParserFactory();
+        } elseif ($type === 'YoungCart') {
+            // $factory = new YoungCartSIRParserFactory();
+        }
+        $parser = new SIRParser($factory);
+        $this->versionManager = new VersionManager($publicPath, $parser);
         $this->current = $this->versionManager->current();
         $this->next = $this->versionManager->next();
         // $this->previous = $this->versionManager->previous();
