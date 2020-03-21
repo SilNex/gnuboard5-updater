@@ -2,7 +2,6 @@
 
 namespace silnex\SIRUpdater;
 
-use IntlException;
 use InvalidArgumentException;
 use silnex\Util\Curl;
 
