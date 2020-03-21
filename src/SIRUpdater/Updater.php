@@ -33,10 +33,6 @@ class Updater
         $this->withTheme = isset($options['withTheme']) ?: false;
     }
 
-    public function setPathInfo()
-    {
-    }
-
     /**
      * @param string $type = 'full'|'patch'
      * @param array $version = ['detail' => ['full' => href, 'patch' => href]]
