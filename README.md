@@ -20,6 +20,7 @@
 
 # Usage
 
+## 기본적인 사용법
 ```php
 <?php
 require_once 'vendor/autoload.php';
@@ -27,9 +28,22 @@ require_once 'vendor/autoload.php';
 use silnex\SIRUpdater\Updater;
 
 $updater = new Updater('/your/public/html/directory');
-$updater->update(true);
+$updater->update();
 ```
+
+## 옵션 및 메소드
+```php
+$updater = new Updater('/your/public/html/directory');
+/**
+ * @param bool $force = 변경사항을 무시하고 덮어씌우기
+ * @param bool $withClear = 업데이트를 완료하고 업데이트에 사용된 파일 삭제
+ */
+$updater->update(true, true);
+$update->restore(); // 업데이트시 생성된 backup으로 복구
+$update->diffCheck(); // 현재 버전의 원본과 다른 파일 정보를 가져옴
+```
+
 
 # Todo
  - [x] 좀더 init 과정 심플하게 바꾸기
- - [ ] 옵션 설명 추가하기
+ - [x] 옵션 설명 추가하기
