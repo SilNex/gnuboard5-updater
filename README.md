@@ -10,11 +10,11 @@
 **해당 패키지는 반드시 공개된 폴더 상위에 설치되어야 합니다.**
 
 ## Composer를 이용한 방법
-    cd /public_html/../
+    cd public_html/../
     composer require silnex/sir-updater
 
 ## 직접 다운로드 하는 방법
-    cd /public_html/../
+    cd public_html/../
     git clone -b with-vendor --single-branch https://github.com/SilNex/sir-updater
 
 
